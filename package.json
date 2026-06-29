@@ -1,10 +1,18 @@
 {
   "name": "automate",
   "version": "1.0.0",
-  "description": "automate , a tool for handling git ops , jira , bitbucket and day to day workflows",
-  "main": "index.js",
+  "description": "A CLI tool for handling Jira, Bitbucket, Git ops, and day-to-day workflows",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "automate": "dist/index.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "start": "node src/index.ts",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "buildStart": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +21,12 @@
     "axios": "^1.18.1",
     "commander": "^15.0.0",
     "execa": "^9.6.1",
+    "inquirer": "^12.5.2",
     "simple-git": "^3.36.0",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "typescript": "^5.0.0"
   }
 }
