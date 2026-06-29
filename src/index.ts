@@ -4,7 +4,7 @@ import inquirer from "inquirer";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-
+import { Theme } from "./configs/global-configs.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const pkg = JSON.parse(
@@ -24,6 +24,11 @@ function showBanner(): void {
   `);
 }
 
+const dim = "\x1b[2m";
+const cyan = "\x1b[36m";
+const bold = "\x1b[1m";
+const reset = "\x1b[0m";
+
 async function showMainMenu(): Promise<void> {
   const { action } = await inquirer.prompt([
     {
@@ -32,13 +37,43 @@ async function showMainMenu(): Promise<void> {
       message: "What would you like to do?",
       pageSize: 8,
       choices: [
-        { name: "🔄  Git Operations", value: "git" },
-        { name: "📋  Jira Operations", value: "jira" },
-        { name: "🔧  Bitbucket Operations", value: "bitbucket" },
-        { name: "📦  Run a Workflow", value: "workflow" },
-        { name: "⚙️   Settings", value: "settings" },
-        { name: "🚪  Exit", value: "exit" },
+        {
+          name: `${bold}Git Operations${reset}`,
+          value: "git",
+          description: "Stage, commit, push, branch management & more",
+        },
+        {
+          name: `${bold}Jira Operations${reset}`,
+          value: "jira",
+          description: "Issues, sprints, projects & board management",
+        },
+        {
+          name: `${bold}Bitbucket Operations${reset}`,
+          value: "bitbucket",
+          description: "PRs, repos, pipelines & code reviews",
+        },
+        {
+          name: `${bold}Run a Workflow${reset}`,
+          value: "workflow",
+          description: "Execute predefined workflows (feature, hotfix, etc.)",
+        },
+        {
+          name: `${bold}Settings${reset}`,
+          value: "settings",
+          description: "Configure repositories, credentials & preferences",
+        },
+        new inquirer.Separator(),
+        {
+          name: `${bold}Exit${reset}`,
+          value: "exit",
+          description: "Close the CLI",
+        },
       ],
+      instructions: {
+        navigation: `${dim}↑/↓ Navigate${reset}  ${cyan}⏎${reset} ${dim}Select${reset}`,
+        pager: `${dim}(See more)${reset}`,
+      },
+      theme: Theme,
     },
   ]);
 

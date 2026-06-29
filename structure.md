@@ -4,19 +4,18 @@ developer-toolkit/
 ├── tsconfig.json
 ├── .env
 │
-├── configs/
-│ ├── global.json
-│ └── repositories/
-│ ├── payments.json
-│ └── mobile.json
-│
 ├── workflows/
 │ ├── feature.json
 │ └── hotfix.json
 │
 ├── src/
 │
-│ ├── index.ts
+| ├── configs/
+| │ ├── global.json
+| │ └── repositories/
+| │ ├── payments.json
+| │ └── mobile.json
+| │ ├── index.ts
 │
 │ ├── commands/
 │ │ ├── git.ts
