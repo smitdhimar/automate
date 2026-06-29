@@ -2,6 +2,23 @@ import { bold, reset } from "../global-configs.js";
 
 // main menu choices
 const mainMenuQestion = "What would you like to do?";
+
+const banner = `
+╔══════════════════════════════════════════════════════════╗
+║                                                          ║
+║                     🚀 automate                          ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+  `;
+
+const usageText = `
+  Usage: automate
+
+  An interactive CLI tool for Jira, Bitbucket, Git ops, and workflows.
+
+  Run without arguments to launch the interactive menu.
+    `;
+
 const mainChoices = [
   {
     name: `${bold}Git Operations${reset}`,
@@ -36,4 +53,4 @@ const exitChoice = {
   description: "Close the CLI",
 };
 
-export { exitChoice, mainChoices, mainMenuQestion };
+export { banner, exitChoice, mainChoices, mainMenuQestion, usageText };
