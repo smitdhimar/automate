@@ -59,4 +59,4 @@ const navigation = {
   navigation: `${dim}↑/↓ Navigate${reset}  ${cyan}⏎${reset} ${dim}Select${reset}`,
   pager: `${dim}(See more)${reset}`,
 };
-export { Theme, bold, reset, navigation, pageSize };
+export { Theme, bold, dim, reset, navigation, pageSize };

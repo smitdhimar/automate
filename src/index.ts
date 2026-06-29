@@ -6,9 +6,11 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { navigation, pageSize, Theme } from "./configs/global-configs.js";
 import {
+  banner,
   exitChoice,
   mainChoices,
   mainMenuQestion,
+  usageText,
 } from "./configs/ui-configs/ui-configs.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,16 +19,7 @@ const pkg = JSON.parse(
 );
 
 function showBanner(): void {
-  console.log(`
-╔══════════════════════════════════════════════════════════╗
-║                                                          ║
-║                     🚀 automate                           ║
-║                         v${pkg.version.padEnd(25)}║
-║     Your command center for Jira, Bitbucket, Git ops      ║
-║              and day-to-day development workflows         ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
-  `);
+  console.log(banner);
 }
 
 async function showMainMenu(): Promise<void> {
@@ -84,17 +77,7 @@ async function main(): Promise<void> {
   // Direct command mode via --flag or subcommand can be added here later
   if (process.argv.length > 2) {
     // If arguments are passed, show help for now
-    console.log(`
-  Usage: automate
-
-  An interactive CLI tool for Jira, Bitbucket, Git ops, and workflows.
-
-  Options:
-    -h, --help      Show help
-    -v, --version   Show version
-
-  Run without arguments to launch the interactive menu.
-    `);
+    console.log(usageText);
     return;
   }
 
