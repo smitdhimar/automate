@@ -47,10 +47,12 @@ const mainChoices = [
   },
 ];
 
+const goBackToMenu = "Go back to Menu?";
+
 const exitChoice = {
   name: `${bold}Exit${reset}`,
   value: "exit",
   description: "Close the CLI",
 };
 
-export { banner, exitChoice, mainChoices, mainMenuQestion, usageText };
+export { banner, exitChoice, mainChoices, goBackToMenu, mainMenuQestion, usageText };
