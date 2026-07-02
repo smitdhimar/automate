@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { WorkflowService } from "../services/workflow.service";
+import { WorkflowService } from "../services/workflow.service.js";
 
 export function registerWorkflowCommands(program: Command) {
 

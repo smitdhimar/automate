@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { ActionRegistry } from "../registry/action.registry";
+import { ActionRegistry } from "../registry/action.registry.js";
 
 export class WorkflowService {
 
