@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import { ActionRegistry } from "../registry/action.registry";
-import { GitService } from "../services/git.service";
+import { ActionRegistry } from "../registry/action.registry.js";
+import { GitService } from "../services/git.service.js";
 
 ActionRegistry.register(
     "git.status",
