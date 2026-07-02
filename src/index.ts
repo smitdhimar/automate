@@ -8,6 +8,7 @@ import { navigation, pageSize, Theme } from "./configs/global-configs.js";
 import {
   banner,
   exitChoice,
+  goBackToMenu,
   mainChoices,
   mainMenuQestion,
   usageText,
@@ -45,7 +46,7 @@ async function showMainMenu(): Promise<void> {
     case "bitbucket":
       console.log("\n🔧 Bitbucket operations coming soon!\n");
       break;
-    case "workflow":
+    case "workflows":
       console.log("\n📦 Workflow execution coming soon!\n");
       break;
     case "settings":
@@ -60,7 +61,7 @@ async function showMainMenu(): Promise<void> {
     {
       type: "confirm",
       name: "continue",
-      message: "Go back to main menu?",
+      message: goBackToMenu,
       default: true,
     },
   ]);
