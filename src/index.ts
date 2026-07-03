@@ -3,6 +3,7 @@
 import inquirer from "inquirer";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
+import prompt from "./utils/promptUtil.js";
 import { fileURLToPath } from "node:url";
 import { navigation, pageSize, Theme } from "./configs/global-configs.js";
 import {
@@ -25,24 +26,15 @@ function showBanner(): void {
 }
 
 async function showMainMenu(): Promise<void> {
-  const { action } = await inquirer.prompt([
-    {
-      type: "list",
-      name: "action",
-      message: mainMenuQestion,
-      pageSize: pageSize,
-      choices: [...mainChoices, new inquirer.Separator(), exitChoice],
-      instructions: navigation,
-      theme: Theme,
-    },
-  ]);
+  
+  const action = await prompt(mainMenuQestion, [...mainChoices, new inquirer.Separator(), exitChoice, exitChoice] );
 
   switch (action) {
     case "git":
       console.log("\n🔧 Git operations coming soon!\n");
       break;
     case "jira":
-      console.log("\n📋 Jira operations coming soon!\n");
+      console.log("\n📋 Jira \operations coming soon!\n");
       break;
     case "bitbucket":
       console.log("\n🔧 Bitbucket operations coming soon!\n");
