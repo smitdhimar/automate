@@ -13,6 +13,7 @@ import {
   mainMenuQestion,
   usageText,
 } from "./configs/ui-configs/ui-configs.js";
+import { logger } from "./utils/logger.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const pkg = JSON.parse(
@@ -20,7 +21,7 @@ const pkg = JSON.parse(
 );
 
 function showBanner(): void {
-  console.log(banner);
+  logger.plain(banner);
 }
 
 async function showMainMenu(): Promise<void> {
@@ -53,7 +54,7 @@ async function showMainMenu(): Promise<void> {
       console.log("\n⚙️  Settings coming soon!\n");
       break;
     case "exit":
-      console.log("\n👋 Goodbye!\n");
+      logger.success("Existed successfullly");
       process.exit(0);
   }
 
@@ -75,10 +76,11 @@ async function showMainMenu(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+
   // Direct command mode via --flag or subcommand can be added here later
   if (process.argv.length > 2) {
     // If arguments are passed, show help for now
-    console.log(usageText);
+    logger.plain(usageText);
     return;
   }
 
