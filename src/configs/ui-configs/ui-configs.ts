@@ -1,7 +1,9 @@
-import { bold, reset } from "../global-configs.js";
+import { colors } from "../global-configs.js";
+
+const { bold, reset } = colors;
 
 // main menu choices
-const mainMenuQestion = "What would you like to do?";
+const mainMenuQestion = "OPERATIONS";
 
 const banner = `
 ╔══════════════════════════════════════════════════════════╗
@@ -18,7 +20,6 @@ const usageText = `
 
   Run without arguments to launch the interactive menu.
     `;
-
 const mainChoices = [
   {
     name: `${bold}Git Operations${reset}`,

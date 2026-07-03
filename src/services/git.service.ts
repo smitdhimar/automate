@@ -1,13 +1,13 @@
-import simpleGit from "simple-git";
+// import simpleGit from "simple-git";
 
-const git = simpleGit();
+// const git = simpleGit();
 
-export class GitService {
+// export class GitService {
 
-    static async status() {
+//     static async status() {
 
-        const status = await git.status();
+//         const status = await git.status();
 
-        console.log(status);
-    }
-}
+//         console.log(status);
+//     }
+// }

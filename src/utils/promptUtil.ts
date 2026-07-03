@@ -1,20 +1,23 @@
-import { Theme } from "../configs/global-configs.js";
 import inquirer from "inquirer";
+import type { Question } from "inquirer";
+import { navigation, pageSize as defaultPageSize, Theme } from "./../configs/global-configs.js";
 
-const prompt = async ( message: any , choices: any[] , pageSize: number = 8) : Promise<String> => {
-  const { action } = await inquirer.prompt([
-    {
-      type: "list",
-      name: "action",
-      message,
-      pageSize,
-      choices:  choices,
-      instructions: navigation,
-      theme: Theme,
-    },
-  ]);
+type PromptConfig = Question & {
+  pageSize?: number;
+};
 
-  return action;
-}
+const prompt = async (config: PromptConfig | PromptConfig[]): Promise<any> => {
+  const questions = Array.isArray(config) ? config : [config];
+
+  const enrichedQuestions = questions.map((q) => ({
+    ...q,
+    theme: Theme,
+    pageSize: q.pageSize ?? defaultPageSize,
+    instructions: navigation,
+  }));
+
+  const answers = await inquirer.prompt(enrichedQuestions);
+  return answers[questions[0]?.name ?? "action"];
+};
 
 export default prompt;
