@@ -1,13 +1,11 @@
 #!/usr/bin/env node
-import { registerGitTools } from "./registry/tools/git.tools.js";
-import { registerJiraTools } from "./registry/tools/jira.tools.js";
 import { MenuService } from "./services/menu.service.js";
 import { generateResponsiveBanner } from "./utils/promptUtil.js";
 import { logger } from "./utils/logger.js";
+import { registerTools } from "./registry/tool.registry.js";
 
 // Register all available tools
-registerGitTools();
-registerJiraTools();
+registerTools();
 
 // Show banner
 logger.plain(generateResponsiveBanner("🚀 Automate"));
