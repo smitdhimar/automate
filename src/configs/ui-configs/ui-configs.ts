@@ -1,17 +1,9 @@
 import { colors } from "../global-configs.js";
 
-const { bold, reset } = colors;
+const { reset } = colors;
 
 // main menu choices
 const mainMenuQestion = "OPERATIONS";
-
-const banner = `
-╔══════════════════════════════════════════════════════════╗
-║                                                          ║
-║                     🚀 automate                          ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
-  `;
 
 const usageText = `
   Usage: automate
@@ -22,27 +14,27 @@ const usageText = `
     `;
 const mainChoices = [
   {
-    name: `${bold}Git Operations${reset}`,
+    name: `Git Operations`,
     value: "git",
     description: "Stage, commit, push, branch management & more",
   },
   {
-    name: `${bold}Jira Operations${reset}`,
+    name: `Jira Operations`,
     value: "jira",
     description: "Issues, sprints, projects & board management",
   },
   {
-    name: `${bold}Bitbucket Operations${reset}`,
+    name: `Bitbucket Operations`,
     value: "bitbucket",
     description: "PRs, repos, pipelines & code reviews",
   },
   {
-    name: `${bold}Run a Workflow${reset}`,
+    name: `Run a Workflow`,
     value: "workflow",
     description: "Execute predefined workflows (feature, hotfix, etc.)",
   },
   {
-    name: `${bold}Settings${reset}`,
+    name: `Settings`,
     value: "settings",
     description: "Configure repositories, credentials & preferences",
   },
@@ -51,9 +43,9 @@ const mainChoices = [
 const goBackToMenu = "Go back to Menu?";
 
 const exitChoice = {
-  name: `${bold}Exit${reset}`,
+  name: `Exit`,
   value: "exit",
   description: "Close the CLI",
 };
 
-export { banner, exitChoice, mainChoices, goBackToMenu, mainMenuQestion, usageText };
+export { exitChoice, mainChoices, goBackToMenu, mainMenuQestion, usageText };

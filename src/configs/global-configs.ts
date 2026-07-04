@@ -23,7 +23,7 @@ const Theme: themeType = {
     frames: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
   },
   icon: {
-    cursor: `${cyan}❯${reset} `,
+    cursor: `${cyan}❯${reset}`,
   },
   style: {
     answer: (text) => `${cyan}${text}${reset}`,

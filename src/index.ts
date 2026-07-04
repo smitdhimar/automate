@@ -4,19 +4,19 @@ import { join, dirname } from "node:path";
 import prompt from "./utils/promptUtil.js";
 import { fileURLToPath } from "node:url";
 import {
-  banner,
   exitChoice,
   goBackToMenu,
   mainChoices,
   mainMenuQestion,
   usageText,
 } from "./configs/ui-configs/ui-configs.js";
+import { generateResponsiveBanner } from "./utils/promptUtil.js";
 import { logger } from "./utils/logger.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 function showBanner(): void {
-  logger.plain(banner);
+  logger.plain(generateResponsiveBanner("🚀 Automate"));
 }
 
 // async function showSubMenu(actionFromMenu: String): Promise<void> {
