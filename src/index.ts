@@ -60,6 +60,8 @@ async function showMainMenu(): Promise<void> {
       process.exit(0);
   }
 
+  
+
   const keepGoing = await prompt({
     type: "confirm",
     name: "continue",
@@ -70,7 +72,7 @@ async function showMainMenu(): Promise<void> {
   if (keepGoing) {
     await showMainMenu();
   } else {
-    console.log("\n👋 Goodbye!\n");
+    logger.success("Existed successfullly");
     process.exit(0);
   }
 }
