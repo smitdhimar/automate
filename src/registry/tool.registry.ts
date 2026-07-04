@@ -1,4 +1,5 @@
 import type { ToolDefinition } from "../types/configs/ui-configs.types/tool-configs.types.js";
+import { gitTools, jiraTools } from "../configs/tools-configs/tools-configs.js";
 
 export class ToolRegistry {
 
@@ -36,4 +37,12 @@ export class ToolRegistry {
         }
         await tool.handler(args);
     }
+}
+
+export const registerTools=() => {
+    [...gitTools, ...jiraTools]?.map((tool: ToolDefinition)=>{
+        if(tool.listTool){
+            ToolRegistry.register(tool);
+        }
+    })
 }
