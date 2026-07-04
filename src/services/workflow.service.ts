@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { ActionRegistry } from "../registry/action.registry.js";
+import { ToolRegistry } from "../registry/tool.registry.js";
 
 export class WorkflowService {
 
@@ -20,7 +20,7 @@ export class WorkflowService {
 
             console.log(`Running ${action}`);
 
-            await ActionRegistry.execute(action);
+            await ToolRegistry.execute(action);
 
         }
     }
