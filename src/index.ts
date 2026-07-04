@@ -1,33 +1,43 @@
 #!/usr/bin/env node
-
 import inquirer from "inquirer";
-import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import prompt from "./utils/promptUtil.js";
 import { fileURLToPath } from "node:url";
-import { navigation, pageSize, Theme } from "./configs/global-configs.js";
 import {
-  banner,
   exitChoice,
   goBackToMenu,
   mainChoices,
   mainMenuQestion,
   usageText,
 } from "./configs/ui-configs/ui-configs.js";
+import { generateResponsiveBanner } from "./utils/promptUtil.js";
 import { logger } from "./utils/logger.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const pkg = JSON.parse(
-  readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
-);
 
 function showBanner(): void {
-  logger.plain(banner);
+  logger.plain(generateResponsiveBanner("🚀 Automate"));
 }
+
+// async function showSubMenu(actionFromMenu: String): Promise<void> {
+
+
+
+//   const action = await prompt({
+//     type: "list",
+//     name: "action",
+//     // message: 
+//     // chioces: operationTypeChoices and go back
+//   })
 
 async function showMainMenu(): Promise<void> {
   
-  const action = await prompt(mainMenuQestion, [...mainChoices, new inquirer.Separator(), exitChoice, exitChoice] );
+  const action = await prompt({
+    type: "list",
+    name: "action",
+    message: mainMenuQestion,
+    choices: [...mainChoices, new inquirer.Separator(), exitChoice],
+  });
 
   switch (action) {
     case "git":
@@ -50,19 +60,19 @@ async function showMainMenu(): Promise<void> {
       process.exit(0);
   }
 
-  const { continue: keepGoing } = await inquirer.prompt([
-    {
-      type: "confirm",
-      name: "continue",
-      message: goBackToMenu,
-      default: true,
-    },
-  ]);
+  
+
+  const keepGoing = await prompt({
+    type: "confirm",
+    name: "continue",
+    message: goBackToMenu,
+    default: true,
+  });
 
   if (keepGoing) {
     await showMainMenu();
   } else {
-    console.log("\n👋 Goodbye!\n");
+    logger.success("Existed successfullly");
     process.exit(0);
   }
 }

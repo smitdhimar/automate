@@ -1,4 +1,4 @@
-import { themeType } from "../types/configs/global-configs.js";
+import { themeType } from "../types/configs/global-configs.types.js";
 
 const reset = "\x1b[0m";
 const dim = "\x1b[2m";
@@ -23,14 +23,14 @@ const Theme: themeType = {
     frames: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
   },
   icon: {
-    cursor: `${cyan}❯${reset} `,
+    cursor: `${cyan}❯${reset}`,
   },
   style: {
     answer: (text) => `${cyan}${text}${reset}`,
     message: (text, status) => {
       const colors: Record<string, string> = {
         idle: `${bold}${white}`,
-        done: `${bold}${green}`,
+        done: `${green}`,
         loading: cyan,
       };
       return `${colors[status] || ""}${text}${reset}`;
@@ -41,7 +41,7 @@ const Theme: themeType = {
     highlight: (text) => `${cyan}${bold}${text}${reset}`,
     key: (text) => `${bold}${cyan}${text}${reset}`,
     disabled: (text) => `${dim}${text}${reset}`,
-    description: (text) => `${dim}${text}${reset}`,
+    description: (text) => `${text}${reset}`,
     keysHelpTip: (keys) => {
       const parts = keys.map(
         ([key, action]) =>
