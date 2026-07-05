@@ -1,5 +1,6 @@
 import { GitService } from "../../services/git.service.js"
 import { JiraService } from "../../services/jira.service.js"
+import { BitbucketService } from "../../services/bitbucket.service.js"
 import { ToolDefinition } from "../../types/configs/ui-configs.types/tool-configs.types.js"
 
 export const gitTools: ToolDefinition[] = [
@@ -86,6 +87,22 @@ export const gitTools: ToolDefinition[] = [
         ],
         handler: GitService.fetchFrom,
         listTool: true
+    },
+    {
+        id: "git.commit",
+        category: "Git",
+        name: "Commit",
+        description: "Commit to specific branch wiht EL number & message",
+        arguments: [
+            {
+                name: "message",
+                label: "Message",
+                type: "string",
+                required: false
+            }
+        ],
+        handler: GitService.commit,
+        listTool: true
     }
 ]
 
@@ -132,6 +149,41 @@ export const jiraTools: ToolDefinition[] = [
             }
         ],
         handler: JiraService.createIssue,
+        listTool: false
+    },
+    // {
+    //     id: "jira.listIssues",
+    //     category: "Jira",
+    //     name: "List Issues",
+    //     description: "List Jira issues for a project",
+    //     arguments: [
+    //         {
+    //             name: "project",
+    //             label: "Project Key",
+    //             type: "string",
+    //             required: true
+    //         }
+    //     ],
+    //     handler: JiraService.getStatus,
+    //     listTool: false
+    // }
+]
+
+export const bitbucketTools: ToolDefinition[] = [
+    {   
+        id: "bitbucket.createBranch",
+        category: "Bitbucket",
+        name: "Create Branch",
+        description: "Create branch from/under spefic issue",
+        arguments: [
+            {
+                name: "issueNumber",
+                label: "Issue Number",
+                type: "string",
+                required: true
+            }
+        ],
+        handler: BitbucketService.createBranch,
         listTool: false
     }
 ]
