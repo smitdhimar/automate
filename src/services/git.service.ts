@@ -69,13 +69,9 @@ export class GitService {
     static async commit(args: {message: string}){
         
         const branchName = await GitService.getBranchName();
-        // Simulate a brief delay so the loader/spinner is visible
-        await new Promise(resolve => setTimeout(resolve, 4500));
-        logger.plain(branchName);
-
         
-        // const response = await git.commit(`${currentBranch} ${args.message}`);
-        // logger.plain(response)
+        const response = await git.commit(`${branchName} ${args.message}`);
+        logger.plain(response)
     }
 }
 
