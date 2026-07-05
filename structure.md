@@ -17,12 +17,6 @@ developer-toolkit/
 | │ └── mobile.json
 | │ ├── index.ts
 │
-│ ├── commands/
-│ │ ├── git.ts
-│ │ ├── jira.ts
-│ │ ├── workflow.ts
-│ │ └── index.ts
-│
 │ ├── services/
 │ │ ├── git.service.ts
 │ │ ├── jira.service.ts
@@ -37,7 +31,7 @@ developer-toolkit/
 │ │ └── http.client.ts
 │
 │ ├── registry/
-│ │ └── action.registry.ts
+│ │ └── tools.registry.ts
 │
 │ ├── utils/
 │ │ ├── logger.ts

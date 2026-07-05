@@ -20,6 +20,6 @@ export const logger = {
     dim: (message: string, ...args: unknown[]) => log(colors.dim, "─", message, ...args),
     bold: (message: string, ...args: unknown[]) => log(colors.bold, "◆", message, ...args),
     raw: (message: string, ...args: unknown[]) => log(colors.white, "LOG", message, ...args),
-    plain: (message: Object, ...args: unknown[]) => console.log(message, ...args),
+    plain: (message: Object, ...args: unknown[]) => console.log("\r \r",message, ...args),
 };
 

@@ -1,5 +1,6 @@
 import { simpleGit } from "simple-git";
 import { logger } from "../utils/logger.js";
+import { JiraService } from "./jira.service.js";
 
 const git = simpleGit();
 
@@ -8,7 +9,7 @@ export class GitService {
     // gets the status of repo
     static async status(_args?: Record<string, any>) {
 
-        const status = await git.status();
+        const status = await git.raw(["status"]);
         logger.plain(status);
     }
 
@@ -45,7 +46,32 @@ export class GitService {
 
     // git push
     static async push() {
-        const response = await git.push();
-        logger.plain(response);
+
+        // check if subtask status is in progress via jira service
+        const status = await JiraService.getStatus();        
+        if (status === "In Progress"){
+            const response = await git.push();
+            logger.plain(response);
+        }
+        else{   
+            logger.error("Subtask is not In Progress");
+            return;
+        }
+    }
+
+    static async getBranchName() {
+        const branch =  await git.branch(['--show-current']);
+        return branch?.current;
+    }
+
+    // git commit to specific issue number with message
+    // issue number will be fetched from current branch name
+    static async commit(args: {message: string}){
+        
+        const branchName = await GitService.getBranchName();
+        
+        const response = await git.commit(`${branchName} ${args.message}`);
+        logger.plain(response)
     }
 }
+

@@ -1,6 +1,7 @@
 import { ToolRegistry } from "../registry/tool.registry.js";
 import { PromptService } from "./prompt.service.js";
 import { logger } from "../utils/logger.js";
+import { withLoader } from "../utils/spinner.js";
 
 export class MenuService {
 
@@ -27,9 +28,11 @@ export class MenuService {
             // 6. Collect arguments from user
             const args = await PromptService.collectArguments(tool.arguments);
 
-            // 7. Execute
+            // 7. Execute with loading spinner
             try {
-                await ToolRegistry.execute(selectedToolId, args);
+                await withLoader(() =>
+                    ToolRegistry.execute(selectedToolId, args)
+                );
                 logger.success(`${tool.name} completed`);
             } catch (err) {
                 logger.error(`${tool.name} failed: ${err}`);
