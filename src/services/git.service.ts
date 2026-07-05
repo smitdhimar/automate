@@ -68,7 +68,7 @@ export class GitService {
     // issue number will be fetched from current branch name
     static async commit(args: {message: string}){
         
-        const branchName = GitService.getBranchName();
+        const branchName = await GitService.getBranchName();
         // Simulate a brief delay so the loader/spinner is visible
         await new Promise(resolve => setTimeout(resolve, 4500));
         logger.plain(branchName);
