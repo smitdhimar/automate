@@ -9,7 +9,7 @@ export class GitService {
     // gets the status of repo
     static async status(_args?: Record<string, any>) {
 
-        const status = await git.status();
+        const status = await git.raw(["status"]);
         logger.plain(status);
     }
 
