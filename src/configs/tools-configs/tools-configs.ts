@@ -27,6 +27,65 @@ export const gitTools: ToolDefinition[] = [
         ],
         handler: GitService.checkout,
         listTool: true
+    },
+    {
+        id:"git.stash",
+        category:"Git",
+        name: "Stash",
+        description:"Take a stash",
+        arguments: [],
+        handler: GitService.stash,
+        listTool: true
+    },
+    {
+        id:"git.stashPop",
+        category:"Git",
+        name: "Stash Pop",
+        description:"Stash pop",
+        arguments: [],
+        handler: GitService.stashPop,
+        listTool: true
+    },
+    {
+        id:"git.push",
+        category:"Git",
+        name: "Push",
+        description:"Push to current branch",
+        arguments: [],
+        handler: GitService.push,
+        listTool: true
+    },
+    {
+        id: "git.pull",
+        category: "Git",
+        name: "Pull",
+        description: "Pull from specified branch",
+        arguments: [
+            {
+                name: "branch",
+                label: "Branch Name",
+                type: "string",
+                required: true
+            }
+        ],
+        handler: GitService.pullFrom,
+        listTool: true
+    },
+    {
+        id: "git.fetch",
+        category: "Git",
+        name: "Fetch",
+        description: "Fetch from specified branch",
+        arguments: [
+            {
+                name: "branch",
+                label: "Branch Name",
+                type: "string",
+                required: true
+            }
+        ],
+        handler: GitService.fetchFrom,
+        listTool: true
     }
 ]
 
