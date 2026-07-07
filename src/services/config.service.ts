@@ -3,27 +3,10 @@ import path from "path";
 import os from "os";
 import { logger } from "../utils/logger.js";
 import { colors } from "../configs/global-configs.js";
+import { DEFAULT_CONFIG } from "../configs/client-configs/config-template.js";
 
 const CONFIG_DIR = path.join(os.homedir(), ".automate");
 const CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
-
-const DEFAULT_CONFIG = {
-  jira: {
-    baseUrl: "https://your-domain.atlassian.net",
-    email: "your-email@example.com",
-    apiToken: "your-jira-api-token",
-    projectKey: "PROJ",
-  },
-  bitbucket: {
-    workspace: "your-workspace",
-    username: "your-username",
-    appPassword: "your-bitbucket-app-password",
-  },
-  git: {
-    defaultBranch: "main",
-    remoteName: "origin",
-  },
-};
 
 export class ConfigService {
   /**
@@ -63,30 +46,43 @@ export class ConfigService {
    * Check whether the config has been filled in by the user
    * (i.e. default placeholders have been replaced)
    */
-  static isConfigured(): boolean {
+  static isConfigFileCreated(): boolean {
     if (!this.configExists()) return false;
 
     const config = this.readConfig();
     if (!config) return false;
 
-    // Quick sanity check — if any top-level value still matches a default placeholder, not configured
-    const defaults = DEFAULT_CONFIG;
-    for (const section of Object.keys(defaults) as Array<keyof typeof defaults>) {
-      const userSection = config[section];
-      if (!userSection || typeof userSection !== "object") return false;
+    return true;
+  }
 
-      for (const key of Object.keys(defaults[section]) as Array<keyof typeof defaults[typeof section]>) {
-        const val: string = userSection[key];
-        const defaultVal: string = defaults[section][key];
-        if (!val || val === defaultVal) {
-          return false;
-        }
+  /**
+   * check wehter the config file has been created and particular config is set 
+   */
+
+  static isServiceCredsConfigured(serviceName: string): boolean {
+    if (!ConfigService.isConfigFileCreated()) {
+      return false;
+    }
+
+    const defaults = (DEFAULT_CONFIG as Record<string, Record<string, string>>)[serviceName];
+    if (!defaults) return true; // unknown service
+
+    const config = this.readConfig();
+    const userSection = config?.[serviceName];
+    if (!userSection || typeof userSection !== "object") return false;
+
+    // Check every key in the default template — if the user's value
+    // is still the placeholder, the service isn't configured yet.
+    for (const key of Object.keys(defaults)) {
+      const val: string = userSection[key];
+      const defaultVal: string = defaults[key];
+      if (!val || val === defaultVal || val.includes("your-")) {
+        return false;
       }
     }
 
     return true;
   }
-
   /**
    * Create the config directory and a starter config file.
    * Returns true if created, false if it already existed.
@@ -140,7 +136,7 @@ export class ConfigService {
   static init(): void {
     const created = this.createDefaultConfig();
 
-    if (created || !this.isConfigured()) {
+    if (created || !this.isConfigFileCreated()) {
       this.showSetupPrompt();
     }
   }

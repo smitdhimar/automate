@@ -2,6 +2,7 @@ import { ToolRegistry } from "../registry/tool.registry.js";
 import { PromptService } from "./prompt.service.js";
 import { logger } from "../utils/logger.js";
 import { withLoader } from "../utils/spinner.js";
+import { ConfigService } from "./config.service.js";
 
 export class MenuService {
 
@@ -15,6 +16,10 @@ export class MenuService {
             const selectedCategory = await PromptService.selectCategory(categories);
             if (!selectedCategory) break; // user chose exit
 
+            if(!ConfigService.isServiceCredsConfigured(selectedCategory)){
+                logger.warn("No configuration found for category ", selectedCategory);
+                break;
+            }
             // 3. Get tools for the selected category
             const tools = ToolRegistry.getTools(selectedCategory);
 
