@@ -65,6 +65,7 @@ export class ConfigService {
     }
 
     const defaults = (DEFAULT_CONFIG as Record<string, Record<string, string>>)[serviceName];
+    
     if (!defaults) return true; // unknown service
 
     const config = this.readConfig();

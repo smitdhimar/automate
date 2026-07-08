@@ -302,11 +302,9 @@ npm unlink automate
 ## 🛠️ Built With
 
 - [TypeScript](https://www.typescriptlang.org/) — Type-safe JavaScript
-- [Commander](https://github.com/tj/commander.js) — CLI framework
 - [Inquirer](https://github.com/SBoudrias/Inquirer.js) — Interactive prompts
 - [simple-git](https://github.com/steveukx/git-js) — Git operations
 - [Axios](https://axios-http.com/) — HTTP client
-- [Zod](https://zod.dev/) — Schema validation
 
 ---
 

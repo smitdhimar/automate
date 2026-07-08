@@ -54,7 +54,7 @@ export const gitTools: ToolDefinition[] = [
         description:"Push to current branch",
         arguments: [],
         handler: GitService.push,
-        listTool: true
+        listTool: false
     },
     {
         id: "git.pull",
