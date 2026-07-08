@@ -47,16 +47,21 @@ export class GitService {
     // git push
     static async push() {
 
+
+        // check if the current branch has any el number + git service has active credentials 
+        // if above both is true check status 
+        // else push 
+
         // check if subtask status is in progress via jira service
-        const status = await JiraService.getStatus();        
-        if (status === "In Progress"){
-            const response = await git.push();
-            logger.plain(response);
-        }
-        else{   
-            logger.error("Subtask is not In Progress");
-            return;
-        }
+        // const status = await JiraService.getStatus();        
+        // if (status === "In Progress"){
+        //     const response = await git.push();
+        //     logger.plain(response);
+        // }
+        // else{   
+        //     logger.error("Subtask is not In Progress");
+        //     return;
+        // }
     }
 
     static async getBranchName() {

@@ -17,8 +17,8 @@ export class MenuService {
             if (!selectedCategory) break; // user chose exit
 
             if(!ConfigService.isServiceCredsConfigured(selectedCategory)){
-                logger.warn("No configuration found for category ", selectedCategory);
-                break;
+                logger.warn(`No configuration found for category ${selectedCategory}. Try adding your credentials at ${ConfigService.configPath}`);
+                continue;
             }
             // 3. Get tools for the selected category
             const tools = ToolRegistry.getTools(selectedCategory);
