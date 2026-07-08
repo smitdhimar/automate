@@ -7,6 +7,9 @@
   "bin": {
     "automate": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node src/index.ts",
