@@ -121,7 +121,7 @@ export const jiraTools: ToolDefinition[] = [
             }
         ],
         handler: JiraService.listIssues,
-        listTool: false
+        listTool: true
     },
     {
         id: "jira.createIssue",
