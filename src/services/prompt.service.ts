@@ -1,5 +1,6 @@
 import inquirer from "inquirer";
 import type { ToolArgument } from "../types/configs/ui-configs.types/tool-configs.types.js";
+import { Theme } from "../configs/global-configs.js";
 
 export class PromptService {
 
@@ -14,7 +15,8 @@ export class PromptService {
                     ...categories.map(c => ({ name: c, value: c })),
                     new inquirer.Separator(),
                     { name: "Exit", value: null }
-                ]
+                ],
+                theme: Theme
             }
         ]);
         return category;
@@ -37,7 +39,8 @@ export class PromptService {
                     })),
                     new inquirer.Separator(),
                     { name: "Back to categories", value: null }
-                ]
+                ],
+                theme: Theme
             }
         ]);
         return toolId;
@@ -53,7 +56,8 @@ export class PromptService {
             required: arg.required,
             validate: arg.validator
                 ? (input: any) => arg.validator!(input)
-                : undefined
+                : undefined,
+            theme: Theme
         }));
 
         const answers = await inquirer.prompt(questions);

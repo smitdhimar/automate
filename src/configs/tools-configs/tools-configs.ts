@@ -120,7 +120,7 @@ export const jiraTools: ToolDefinition[] = [
                 required: true
             }
         ],
-        handler: JiraService.listIssues,
+        handler: JiraService.listIssues.bind(JiraService),
         listTool: true
     },
     {
@@ -148,7 +148,7 @@ export const jiraTools: ToolDefinition[] = [
                 required: false
             }
         ],
-        handler: JiraService.createIssue,
+        handler: JiraService.createIssue.bind(JiraService),
         listTool: false
     },
     // {
@@ -183,7 +183,7 @@ export const bitbucketTools: ToolDefinition[] = [
                 required: true
             }
         ],
-        handler: BitbucketService.createBranch,
+        handler: BitbucketService.createBranch.bind(BitbucketService),
         listTool: false
     }
 ]

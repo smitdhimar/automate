@@ -1,6 +1,6 @@
 {
   "name": "automate-cli",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A CLI tool for handling Jira, Bitbucket, Git ops, and day-to-day workflows",
   "type": "module",
   "main": "dist/index.js",
@@ -22,6 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.18.1",
+    "chalk": "^5.6.2",
     "execa": "^9.6.1",
     "inquirer": "^12.5.2",
     "simple-git": "^3.36.0"
