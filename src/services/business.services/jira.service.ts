@@ -29,7 +29,7 @@ export class JiraService {
     const data = await this.client.get<{ issues: unknown[] }>(
       `/rest/api/3/search/jql?jql=project=${encodeURIComponent(args.project)}`,
     );
-    logger.plain(`✅ Found ${data.issues.length} issue(s)`);
+    logger.success(`Found ${data?.issues?.length} issue(s)`);
     return data.issues;
   }
 
