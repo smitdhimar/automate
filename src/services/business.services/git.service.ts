@@ -1,6 +1,5 @@
 import { simpleGit } from "simple-git";
-import { logger } from "../utils/logger.js";
-import { JiraService } from "./jira.service.js";
+import { logger } from "../../utils/logger.js";
 
 const git = simpleGit();
 

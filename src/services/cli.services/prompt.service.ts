@@ -1,6 +1,6 @@
 import inquirer from "inquirer";
-import type { ToolArgument } from "../types/configs/ui-configs.types/tool-configs.types.js";
-import { Theme } from "../configs/global-configs.js";
+import type { ToolArgument } from "../../types/configs/ui-configs.types/tool-configs.types.js";
+import { Theme } from "../../configs/global-configs.js";
 
 export class PromptService {
 

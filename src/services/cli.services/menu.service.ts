@@ -1,7 +1,7 @@
-import { ToolRegistry } from "../registry/tool.registry.js";
+import { ToolRegistry } from "../../registry/tool.registry.js";
 import { PromptService } from "./prompt.service.js";
-import { logger } from "../utils/logger.js";
-import { withLoader } from "../utils/spinner.js";
+import { logger } from "../../utils/logger.js";
+import { withLoader } from "../../utils/spinner.js";
 import { ConfigService } from "./config.service.js";
 
 export class MenuService {

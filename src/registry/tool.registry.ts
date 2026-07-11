@@ -1,5 +1,5 @@
 import type { ToolDefinition } from "../types/configs/ui-configs.types/tool-configs.types.js";
-import { gitTools, jiraTools } from "../configs/tools-configs/tools-configs.js";
+import { gitTools, jiraTools } from "../configs/tools-configs/tools.configs.js";
 
 export class ToolRegistry {
 

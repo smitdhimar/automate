@@ -1,6 +1,6 @@
-import { GitService } from "../../services/git.service.js"
-import { JiraService } from "../../services/jira.service.js"
-import { BitbucketService } from "../../services/bitbucket.service.js"
+import { GitService } from "../../services/business.services/git.service.js"
+import { JiraService } from "../../services/business.services/jira.service.js"
+import { BitbucketService } from "../../services/business.services/bitbucket.service.js"
 import { ToolDefinition } from "../../types/configs/ui-configs.types/tool-configs.types.js"
 
 export const gitTools: ToolDefinition[] = [

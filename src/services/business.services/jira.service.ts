@@ -1,9 +1,9 @@
-import { logger } from "../utils/logger.js";
-import { getIssueNumberFromBranch } from "../utils/utilsForServices.ts/gitServiceUtils.js";
+import { logger } from "../../utils/logger.js";
+import { getIssueNumberFromBranch } from "../../utils/utilsForServices.ts/gitServiceUtils.js";
 import { GitService } from "./git.service.js";
-import { ConfigService } from "./config.service.js";
-import { JiraClient } from "../clients/jira.client.js";
-import type { JiraConfig } from "../types/configs/client-configs.types.js";
+import { ConfigService } from "../cli.services/config.service.js";
+import { JiraClient } from "../../clients/jira.client.js";
+import type { JiraConfig } from "../../types/configs/client-configs.types.js";
 
 export class JiraService {
 
