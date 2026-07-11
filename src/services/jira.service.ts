@@ -27,7 +27,7 @@ export class JiraService {
   static async listIssues(args: { project: string }) {
     logger.info(`Listing Jira issues for project: ${args.project}`);
     const data = await this.client.get<{ issues: unknown[] }>(
-      `/rest/api/3/search?jql=project=${encodeURIComponent(args.project)}`,
+      `/rest/api/3/search/jql?jql=project=${encodeURIComponent(args.project)}`,
     );
     logger.plain(`✅ Found ${data.issues.length} issue(s)`);
     return data.issues;

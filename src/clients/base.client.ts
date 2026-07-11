@@ -9,7 +9,7 @@ import { HttpClient, httpClient } from "./http.client.js";
  */
 export abstract class IProductClient {
 
-  constructor(protected http: HttpClient = httpClient) {}
+  protected http: HttpClient = httpClient;
 
   /**
    * Subclasses must provide the base URL for their API.
