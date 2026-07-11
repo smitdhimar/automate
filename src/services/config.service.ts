@@ -56,7 +56,8 @@ export class ConfigService {
   }
 
   /**
-   * check wehter the config file has been created and particular config is set 
+   * Check whether the config file has been created and a particular
+   * service's credentials are configured (based on its hosting type).
    */
 
   static isServiceCredsConfigured(serviceName: string): boolean {
@@ -64,19 +65,25 @@ export class ConfigService {
       return false;
     }
 
-    const defaults = (DEFAULT_CONFIG as Record<string, Record<string, string>>)[serviceName];
-    
+    const defaults = (DEFAULT_CONFIG as Record<string, any>)[serviceName];
     if (!defaults) return true; // unknown service
 
     const config = this.readConfig();
     const userSection = config?.[serviceName];
     if (!userSection || typeof userSection !== "object") return false;
 
-    // Check every key in the default template — if the user's value
-    // is still the placeholder, the service isn't configured yet.
-    for (const key of Object.keys(defaults)) {
-      const val: string = userSection[key];
-      const defaultVal: string = defaults[key];
+    // 1. Check that "hosting" is set to a valid value
+    const hosting: string | undefined = userSection.hosting;
+    if (hosting !== "cloud" && hosting !== "self-hosted") return false;
+
+    // 2. Check that the relevant sub-config is filled in
+    const section = userSection[hosting];
+    if (!section || typeof section !== "object") return false;
+
+    const defaultSection = defaults[hosting] as Record<string, string>;
+    for (const key of Object.keys(defaultSection)) {
+      const val: string | undefined = section[key];
+      const defaultVal: string = defaultSection[key];
       if (!val || val === defaultVal || val.includes("your-")) {
         return false;
       }

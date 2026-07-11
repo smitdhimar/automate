@@ -10,7 +10,7 @@ export interface ToolDefinition {
 
     arguments: ToolArgument[]; // list of args
 
-    handler(args: Record<string, any>): Promise<void>; // the handler
+    handler(args: Record<string, any>): Promise<void | unknown>; // the handler
     
     listTool: boolean;  // whether to list the tool or not 
 }

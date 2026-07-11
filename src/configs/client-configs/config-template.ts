@@ -1,13 +1,28 @@
 export const DEFAULT_CONFIG = {
   "Jira": {
-    "baseUrl": "https://your-domain.atlassian.net",
-    "email": "your-email@example.com",
-    "apiToken": "your-jira-api-token",
-    "projectKey": "PROJ",
+    "hosting": "cloud",
+    "cloud": {
+      "site": "your-domain",
+      "email": "your-email@example.com",
+      "apiToken": "your-jira-api-token"
+    },
+    "selfHosted": {
+      "baseUrl": "https://jira.your-company.com",
+      "username": "your-username",
+      "password": "your-password"
+    }
   },
   "Bitbucket": {
-    "workspace": "your-workspace",
-    "username": "your-username",
-    "appPassword": "your-bitbucket-app-password",
+    "hosting": "cloud",
+    "cloud": {
+      "workspace": "your-workspace",
+      "username": "your-username",
+      "appPassword": "your-bitbucket-app-password"
+    },
+    "selfHosted": {
+      "baseUrl": "https://bitbucket.your-company.com",
+      "username": "your-username",
+      "password": "your-password"
+    }
   }
 };
