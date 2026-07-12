@@ -18,7 +18,6 @@ const magenta = "\x1b[35m";
 // Background colors
 // const bgBlue = "\x1b[44m";
 
-const pageSize = 8;
 
 const Theme: themeType = {
   prefix: {
@@ -72,4 +71,4 @@ const colors = {
   blue, brightBlue, cyan, green, yellow, red, white, magenta,
 };
 
-export { Theme, reset, navigation, pageSize, colors };
+export { Theme, reset, navigation, colors };

@@ -30,7 +30,7 @@ export class PromptService {
                 type: "list",
                 name: "toolId",
                 message: "Select a tool:",
-                pageSize: 10,
+                pageSize: 12,
                 choices: [
                     ...tools.map(t => ({
                         name: t.name,
@@ -57,7 +57,8 @@ export class PromptService {
             validate: arg.validator
                 ? (input: any) => arg.validator!(input)
                 : undefined,
-            theme: Theme
+            theme: Theme,
+            default: arg?.default
         }));
 
         const answers = await inquirer.prompt(questions);
