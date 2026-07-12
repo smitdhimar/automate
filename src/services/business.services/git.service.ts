@@ -20,8 +20,8 @@ export class GitService {
     }
 
     // pull from specific origin branch
-    static async pullFrom(args: { branch: string }){
-        const response = await git.pull('origin', args.branch);
+    static async pullFrom(args: { branch: string, origin?: string }){
+        const response = await git.pull(args.origin || 'origin', args.branch);
         logger.plain(response);
     }
 
@@ -59,11 +59,19 @@ export class GitService {
         //     logger.error("Subtask is not In Progress");
         //     return;
         // }
+
+        const response = await git.push();
+        logger.plain(response);
     }
 
     static async getBranchName() {
         const branch =  await git.branch(['--show-current']);
         return branch?.current;
+    }
+
+    static async addAll() {
+        const response = await git.add('.');
+        logger.plain(response);
     }
 
     // git commit to specific issue number with message

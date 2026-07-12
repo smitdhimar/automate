@@ -59,15 +59,23 @@ export const gitTools: ToolDefinition[] = [
         description:"Push to current branch",
         arguments: [],
         handler: GitService.push,
-        listTool: false,
+        listTool: true,
         helperStr: "git push"
     },
     {
         id: "git.pull",
         category: "Git",
         name: "Pull",
-        description: "Pull from specified branch",
+        description: "Pull from specified origin & branch",
         arguments: [
+
+            {
+                name: "origin",
+                label: "Origin",
+                type: "string",
+                required: false,
+                default: "origin"
+            },
             {
                 name: "branch",
                 label: "Branch Name",
@@ -77,7 +85,7 @@ export const gitTools: ToolDefinition[] = [
         ],
         handler: GitService.pullFrom,
         listTool: true,
-        helperStr: "git pull origin <branch-name>"
+        helperStr: "git pull <origin> <branch-name>"
     },
     {
         id: "git.fetch",
@@ -85,6 +93,13 @@ export const gitTools: ToolDefinition[] = [
         name: "Fetch",
         description: "Fetch from specified branch",
         arguments: [
+            {
+                name: "origin",
+                label: "Origin",
+                type: "string",
+                required: false,
+                default: 'origin'  
+            },
             {
                 name: "branch",
                 label: "Branch Name",
@@ -94,7 +109,17 @@ export const gitTools: ToolDefinition[] = [
         ],
         handler: GitService.fetchFrom,
         listTool: true,
-        helperStr: "git fetch origin <branch-name>"
+        helperStr: "git fetch <origin> <branch-name>"
+    },
+    {
+        id: "git.addAll",
+        category: "Git",
+        name: "addAll",
+        description: "Stage all changes",
+        arguments:[],
+        handler: GitService.addAll,
+        listTool: true,
+        helperStr: "git add ."
     },
     {
         id: "git.commit",
@@ -196,3 +221,9 @@ export const bitbucketTools: ToolDefinition[] = [
         listTool: false
     }
 ]
+
+export const orderForTools = {
+    "Git":['git.stash', 'git.addAll', 'git.commit', 'git.push', 'git.stashPop', 'git.fetch', 'git.checkout', 'git.status', 'git.pull', ],
+    "Jira":[],
+    "Bitbucket":[]
+}

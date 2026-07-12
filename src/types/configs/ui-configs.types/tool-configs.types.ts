@@ -30,6 +30,8 @@ export interface ToolArgument {
 
     required: boolean;
 
+    default?: string;
+
     validator?(value: any): boolean;
 
 }

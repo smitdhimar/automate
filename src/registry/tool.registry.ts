@@ -1,5 +1,6 @@
 import type { ToolDefinition } from "../types/configs/ui-configs.types/tool-configs.types.js";
-import { gitTools, jiraTools } from "../configs/tools-configs/tools.configs.js";
+import { gitTools, jiraTools, orderForTools as order} from "../configs/tools-configs/tools.configs.js";
+import { sortToolsByOrder } from "../utils/sortTools.js";
 
 export class ToolRegistry {
 
@@ -40,7 +41,12 @@ export class ToolRegistry {
 }
 
 export const registerTools=() => {
-    [...gitTools, ...jiraTools]?.map((tool: ToolDefinition)=>{
+
+    const gitToolsSorted = sortToolsByOrder(gitTools, order?.Git);    
+    const jiraToolsSorted = sortToolsByOrder(jiraTools, order?.Jira);
+    // const bitbucketToolsSorted = sortToolsByOrder()
+
+    [...gitToolsSorted, ...jiraToolsSorted]?.map((tool: ToolDefinition)=>{
         if(tool.listTool){
             ToolRegistry.register(tool);
         }
