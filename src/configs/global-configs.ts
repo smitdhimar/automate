@@ -16,7 +16,7 @@ const white = "\x1b[37m";
 const magenta = "\x1b[35m";
 
 // Background colors
-const bgBlue = "\x1b[44m";
+// const bgBlue = "\x1b[44m";
 
 const pageSize = 8;
 
@@ -45,10 +45,10 @@ const Theme: themeType = {
     error: (text) => `${bold}${red}${text}${reset}`,
     defaultAnswer: (text) => `${dim}${text}${reset}`,
     help: (text) => `${dim}${text}${reset}`,
-    highlight: (text) => `${bgBlue}${white}${bold}${text}${reset}`,
+    highlight: (text) => `${cyan}${bold}${text}${reset}`,
     key: (text) => `${bold}${brightBlue}${text}${reset}`,
     disabled: (text) => `${dim}${text}${reset}`,
-    description: (text) => `${dim}${text}${reset}`,
+    description: (text) => `~ ${white}${text}${reset}`,
     keysHelpTip: (keys) => {
       const parts = keys.map(
         ([key, action]) =>
@@ -70,7 +70,6 @@ const navigation = {
 const colors = {
   reset, dim, bold,
   blue, brightBlue, cyan, green, yellow, red, white, magenta,
-  bgBlue,
 };
 
 export { Theme, reset, navigation, pageSize, colors };

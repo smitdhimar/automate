@@ -23,7 +23,7 @@ export class ToolRegistry {
     static getTools(category: string): Pick<ToolDefinition, "id" | "name" | "description">[] {
         return Array.from(this.tools.values())
             .filter(t => t.category === category)
-            .map(t => ({ id: t.id, name: t.name, description: t.description }));
+            .map(t => ({ id: t.id, name: t.name, description: t.description, helperStr: t?.helperStr }));
     }
 
     static getTool(id: string): ToolDefinition | undefined {

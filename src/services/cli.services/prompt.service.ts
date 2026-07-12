@@ -1,6 +1,6 @@
 import inquirer from "inquirer";
 import type { ToolArgument } from "../../types/configs/ui-configs.types/tool-configs.types.js";
-import { Theme } from "../../configs/global-configs.js";
+import { colors, Theme } from "../../configs/global-configs.js";
 
 export class PromptService {
 
@@ -23,7 +23,7 @@ export class PromptService {
     }
 
     static async selectTool(
-        tools: { id: string; name: string; description: string }[]
+        tools: { id: string; name: string; description: string; helperStr?: string }[]
     ): Promise<string | null> {
         const { toolId } = await inquirer.prompt([
             {
@@ -35,7 +35,7 @@ export class PromptService {
                     ...tools.map(t => ({
                         name: t.name,
                         value: t.id,
-                        description: t.description
+                        description: `${t.description}${colors?.dim} ${t?.helperStr ?? ""}`
                     })),
                     new inquirer.Separator(),
                     { name: "Back to categories", value: null }

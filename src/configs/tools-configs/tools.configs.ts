@@ -11,7 +11,8 @@ export const gitTools: ToolDefinition[] = [
         description:"Show repository status",
         arguments: [],
         handler: GitService.status,
-        listTool: true
+        listTool: true,
+        helperStr: "git status"
     },
     {
         id: "git.checkout",
@@ -27,7 +28,9 @@ export const gitTools: ToolDefinition[] = [
             }
         ],
         handler: GitService.checkout,
-        listTool: true
+        listTool: true,
+        helperStr: "git checkout <branch-name>"
+
     },
     {
         id:"git.stash",
@@ -36,7 +39,8 @@ export const gitTools: ToolDefinition[] = [
         description:"Take a stash",
         arguments: [],
         handler: GitService.stash,
-        listTool: true
+        listTool: true,
+        helperStr: "git stash"
     },
     {
         id:"git.stashPop",
@@ -45,7 +49,8 @@ export const gitTools: ToolDefinition[] = [
         description:"Stash pop",
         arguments: [],
         handler: GitService.stashPop,
-        listTool: true
+        listTool: true,
+        helperStr: "git stash pop"
     },
     {
         id:"git.push",
@@ -54,7 +59,8 @@ export const gitTools: ToolDefinition[] = [
         description:"Push to current branch",
         arguments: [],
         handler: GitService.push,
-        listTool: false
+        listTool: false,
+        helperStr: "git push"
     },
     {
         id: "git.pull",
@@ -70,7 +76,8 @@ export const gitTools: ToolDefinition[] = [
             }
         ],
         handler: GitService.pullFrom,
-        listTool: true
+        listTool: true,
+        helperStr: "git pull origin <branch-name>"
     },
     {
         id: "git.fetch",
@@ -86,7 +93,8 @@ export const gitTools: ToolDefinition[] = [
             }
         ],
         handler: GitService.fetchFrom,
-        listTool: true
+        listTool: true,
+        helperStr: "git fetch origin <branch-name>"
     },
     {
         id: "git.commit",
@@ -102,8 +110,9 @@ export const gitTools: ToolDefinition[] = [
             }
         ],
         handler: GitService.commit,
-        listTool: true
-    }
+        listTool: true,
+        helperStr: "git commit -m \"<commit-message>\""
+    },
 ]
 
 export const jiraTools: ToolDefinition[] = [
