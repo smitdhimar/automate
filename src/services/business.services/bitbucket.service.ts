@@ -1,7 +1,7 @@
-import { logger } from "../utils/logger.js";
-import { ConfigService } from "./config.service.js";
-import { BitbucketClient } from "../clients/bitbucket.client.js";
-import type { BitbucketConfig } from "../types/configs/client-configs.types.js";
+import { logger } from "../../utils/logger.js";
+import { ConfigService } from "../cli.services/config.service.js";
+import { BitbucketClient } from "../../clients/bitbucket.client.js";
+import type { BitbucketConfig } from "../../types/configs/client-configs.types.js";
 import { GitService } from "./git.service.js";
 
 export class BitbucketService {

@@ -1,9 +1,8 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { logger } from "../utils/logger.js";
-import { colors } from "../configs/global-configs.js";
-import { DEFAULT_CONFIG } from "../configs/client-configs/config-template.js";
+import { DEFAULT_CONFIG } from "../../configs/client-configs/config-template.js";
+import { printSetupPromptUtil } from "../../utils/utilsForServices.ts/configServiceUtils.js";
 
 const CONFIG_DIR = path.join(os.homedir(), ".automate");
 const CONFIG_PATH = path.join(CONFIG_DIR, "config.json");
@@ -116,22 +115,7 @@ export class ConfigService {
    * Display a setup prompt to the user telling them where the config file is.
    */
   static showSetupPrompt(): void {
-    const { bold, cyan, yellow, dim, reset } = colors;
-
-    console.log("");
-    logger.warn("First-time setup required!");
-    console.log("");
-    console.log(`  A configuration file has been created at:`);
-    console.log(`  ${cyan}${CONFIG_PATH}${reset}`);
-    console.log("");
-    console.log(`  ${yellow}Please:${reset}`);
-    console.log(`    1. Open the file:  ${cyan}code ${CONFIG_PATH}${reset}`);
-    console.log(`    2. Fill in your ${bold}Jira${reset}, ${bold}Bitbucket${reset}, and ${bold}Git${reset} credentials`);
-    console.log(`    3. Save the file`);
-    console.log(`    4. Run ${cyan}automate${reset} again`);
-    console.log("");
-    console.log(`  ${dim}You can also use any text editor to edit the file.${reset}`);
-    console.log("");
+    printSetupPromptUtil(CONFIG_PATH);
     process.exit(0);
   }
 

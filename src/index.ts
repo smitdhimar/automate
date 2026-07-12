@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { ConfigService } from "./services/config.service.js";
-import { MenuService } from "./services/menu.service.js";
+import { ConfigService } from "./services/cli.services/config.service.js";
+import { MenuService } from "./services/cli.services/menu.service.js";
 import { generateResponsiveBanner } from "./utils/promptUtil.js";
 import { logger } from "./utils/logger.js";
 import { registerTools } from "./registry/tool.registry.js";

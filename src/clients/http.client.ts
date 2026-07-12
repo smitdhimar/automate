@@ -1,5 +1,3 @@
-import { logger } from "../utils/logger.js";
-
 /**
  * Thin wrapper around `fetch` that:
  *  - Builds the full URL from a base + path
@@ -33,15 +31,11 @@ export class HttpClient {
     if (opts.body && opts.method !== "GET") {
       init.body = JSON.stringify(opts.body);
     }
-
-    logger.debug(`[HTTP] ${opts.method} ${url}`);
-
     const res = await fetch(url, init);
 
     if (!res.ok) {
       const body = await res.text().catch(() => "(no body)");
       const msg = `[HTTP ${res.status}] ${opts.method} ${url} — ${body}`;
-      logger.error(msg);
       throw new Error(msg);
     }
 

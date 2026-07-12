@@ -13,6 +13,8 @@ export interface ToolDefinition {
     handler(args: Record<string, any>): Promise<void | unknown>; // the handler
     
     listTool: boolean;  // whether to list the tool or not 
+
+    helperStr?: string;
 }
 
 export interface ToolArgument {
@@ -27,6 +29,8 @@ export interface ToolArgument {
         | "boolean";
 
     required: boolean;
+
+    default?: string;
 
     validator?(value: any): boolean;
 

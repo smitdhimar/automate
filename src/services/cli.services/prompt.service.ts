@@ -1,6 +1,6 @@
 import inquirer from "inquirer";
-import type { ToolArgument } from "../types/configs/ui-configs.types/tool-configs.types.js";
-import { Theme } from "../configs/global-configs.js";
+import type { ToolArgument } from "../../types/configs/ui-configs.types/tool-configs.types.js";
+import { colors, Theme } from "../../configs/global-configs.js";
 
 export class PromptService {
 
@@ -23,19 +23,19 @@ export class PromptService {
     }
 
     static async selectTool(
-        tools: { id: string; name: string; description: string }[]
+        tools: { id: string; name: string; description: string; helperStr?: string }[]
     ): Promise<string | null> {
         const { toolId } = await inquirer.prompt([
             {
                 type: "list",
                 name: "toolId",
                 message: "Select a tool:",
-                pageSize: 10,
+                pageSize: 12,
                 choices: [
                     ...tools.map(t => ({
                         name: t.name,
                         value: t.id,
-                        description: t.description
+                        description: `${t.description}${colors?.dim} ${t?.helperStr ?? ""}`
                     })),
                     new inquirer.Separator(),
                     { name: "Back to categories", value: null }
@@ -57,7 +57,8 @@ export class PromptService {
             validate: arg.validator
                 ? (input: any) => arg.validator!(input)
                 : undefined,
-            theme: Theme
+            theme: Theme,
+            default: arg?.default
         }));
 
         const answers = await inquirer.prompt(questions);
