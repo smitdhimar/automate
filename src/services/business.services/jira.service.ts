@@ -27,7 +27,7 @@ export class JiraService {
   static async listIssues(args: { project: string }) {
     logger.info(`Listing Jira issues for project: ${args.project}`);
     const data = await this.client.get<{ issues: unknown[] }>(
-      `/rest/api/3/search/jql?jql=project=${encodeURIComponent(args.project)}`,
+      `/search?jql=project=${encodeURIComponent(args.project)}`,
     );
     logger.success(`Found ${data?.issues?.length} issue(s)`);
     return data.issues;
@@ -57,8 +57,8 @@ export class JiraService {
       };
     }
 
-    const issue = await this.client.post("/rest/api/3/issue", body);
-    logger.plain(`✅ Issue created: ${(issue as { key: string }).key}`);
+    const issue = await this.client.post<{ key: string }>("/issue", body);
+    logger.plain(`✅ Issue created: ${issue.key}`);
     return issue;
   }
 
@@ -68,7 +68,7 @@ export class JiraService {
     const issueNumber = getIssueNumberFromBranch(branch);
 
     const data = await this.client.get<{ fields: { status: { name: string } } }>(
-      `/rest/api/3/issue/${issueNumber}`,
+      `/issue/${issueNumber}`,
     );
     logger.plain(`✅ Status for ${issueNumber}: ${data.fields.status.name}`);
     return data.fields.status.name;

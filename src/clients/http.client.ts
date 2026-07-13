@@ -46,6 +46,9 @@ export class HttpClient {
   }
 
   get<T = unknown>(baseUrl: string, path: string, headers: Record<string, string>) {
+    console.log('path :>> ', path);
+    console.log('baseUrl :>> ', baseUrl);
+
     return this.request<T>({ method: "GET", path, baseUrl, headers });
   }
 
