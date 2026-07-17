@@ -21,71 +21,14 @@
 
 ---
 
-## 📁 Project Structure
-
-```
-automate/
-│
-├── package.json                  # Project manifest & dependencies
-├── tsconfig.json                 # TypeScript configuration
-├── README.md                     # This file
-│
-├── src/
-│   ├── index.ts                  # Entry point — initializes config & starts menu
-│   │
-│   ├── clients/
-│   │   ├── bitbucket.client.ts   # Bitbucket API client
-│   │   └── jira.client.ts        # Jira API client
-│   │
-│   ├── configs/
-│   │   ├── global-configs.ts     # Global constants & theme settings
-│   │   ├── client-configs/
-│   │   │   └── config-template.ts # Default config template (creds placeholders)
-│   │   ├── tools-configs/
-│   │   │   └── tools-configs.ts  # Tool definitions (Git, Jira tools)
-│   │   └── ui-configs/
-│   │       └── ui-configs.ts     # UI-related configurations
-│   │
-│   ├── registry/
-│   │   └── tool.registry.ts      # Tool registry — registers & dispatches tools
-│   │
-│   ├── services/
-│   │   ├── git.service.ts        # Git operations (status, commit, push, etc.)
-│   │   ├── jira.service.ts       # Jira operations (list/create issues)
-│   │   ├── bitbucket.service.ts  # Bitbucket operations (create branch)
-│   │   ├── config.service.ts     # Config file management (~/.automate/config.json)
-│   │   ├── menu.service.ts       # Interactive menu loop (category → tool → execute)
-│   │   ├── prompt.service.ts     # Inquirer-based prompt helpers
-│   │   └── workflow.service.ts   # Workflow execution from JSON files
-│   │
-│   ├── types/
-│   │   └── configs/
-│   │       ├── global-configs.types.ts
-│   │       └── ui-configs.types/
-│   │           └── tool-configs.types.ts  # ToolDefinition type
-│   │
-│   └── utils/
-│       ├── logger.ts             # Colored console logger
-│       ├── promptUtil.ts         # Inquirer prompt wrapper & banner generator
-│       ├── spinner.ts            # Loading spinner utility
-│       └── utilsForServices.ts/
-│           └── gitServiceUtils.ts # Git helper utilities
-│
-└── workflows/                    # Workflow JSON files (feature, hotfix, etc.)
-    ├── feature.json
-    └── hotfix.json
-```
-
----
-
 ## ✨ Features
 
 | Category  | Available Actions |
 |-----------|------------------|
 | **🔄 Git** | Check status, checkout branches, stash/unstash, commit, push, pull, fetch |
 | **📋 Jira** | List issues, create issues |
-| **🪣 Bitbucket** | Create branches from issues |
-| **⚡ Workflows** | Run predefined multi-step workflows (feature, hotfix) |
+<!-- | **🪣 Bitbucket** | Create branches from issues |
+| **⚡ Workflows** | Run predefined multi-step workflows (feature, hotfix) | -->
 
 ---
 
@@ -142,28 +85,6 @@ It will then print instructions and exit so you can set up your credentials.
 
 ```
 ~/.automate/config.json
-```
-
-### Default Template
-
-When the config file is first created, it looks like this:
-
-```json
-{
-  "_instructions": "Edit this file with your actual credentials and settings.",
-  "jira": {
-    "baseUrl": "https://your-domain.atlassian.net",
-    "email": "your-email@example.com",
-    "apiToken": "your-jira-api-token",
-    "projectKey": "PROJ"
-  },
-  "bitbucket": {
-    "workspace": "your-workspace",
-    "username": "your-username",
-    "appPassword": "your-bitbucket-app-password"
-  },
-  "_note": "Replace all 'your-*' values with your real configuration."
-}
 ```
 
 ### Setup Steps
@@ -246,7 +167,7 @@ Each Git operation in the menu maps to a real `git` command under the hood:
 
 ---
 
-## 🧪 Publishing & Test
+<!-- ## 🧪 Publishing & Test
 
 ### Publishing to npm
 
@@ -306,7 +227,7 @@ npm unlink automate
 - [simple-git](https://github.com/steveukx/git-js) — Git operations
 - [Axios](https://axios-http.com/) — HTTP client
 
----
+--- -->
 
 <div align="center">
   Made by <a href="https://github.com/smitdhimar61">smitdhimar61</a>

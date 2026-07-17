@@ -8,9 +8,30 @@ import { IProductClient } from "./base.client.js";
  * The deployment type is determined by `config.hosting` — the rest of the
  * application never needs to care about which one is in use.
  *
- * `get` / `post` / `put` / `delete` are inherited from `IProductClient`.
+ * Cloud  → `/rest/api/3/…`
+ * Self-hosted → `/rest/api/2/…`
+ *
+ * ⚠️ **Services must use the domain methods** below rather than calling
+ * `get`/`post` directly, because some endpoints have different path
+ * structures between v2 and v3 (e.g. search).
  */
 export class JiraClient extends IProductClient {
+
+  /**
+   * Map of logical endpoint → version-specific relative paths.
+   * Override entries here when the v2 and v3 paths differ structurally.
+   */
+  private static readonly VERSION_PATHS: Record<string, { 2: string; 3: string }> = {
+    
+    "/search": {
+      2: "/search",
+      3: "/search/jql", // Cloud v3 moved the endpoint under /jql
+    },
+    "/issue":{
+      2: "/issue",
+      3: "/issue"
+    }
+  };
 
   constructor(private config: JiraConfig) {
     super();
@@ -22,6 +43,25 @@ export class JiraClient extends IProductClient {
     return this.config.hosting === "cloud"
       ? `https://${this.config.cloud.site}.atlassian.net`
       : this.config.selfHosted.baseUrl.replace(/\/+$/, "");
+  }
+
+  /**
+   * Cloud Jira uses REST API v3, self-hosted still uses v2.
+   */
+  protected get apiPrefix(): string {
+    return this.config.hosting === "cloud" ? "/rest/api/3" : "/rest/api/2";
+  }
+
+  /**
+   * Resolves logical paths to version-specific paths, falling back to the
+   * path as-is when no override exists.
+   */
+  protected buildPath(path: string): string {
+    const pathSliced = path.split("?");
+    const versionKey = this.config.hosting === "cloud" ? "3" : "2";
+    const override = JiraClient.VERSION_PATHS[pathSliced[0]];
+    const resolved = `${override?.[versionKey]}${pathSliced?.length > 1 ? `?${pathSliced[1]}` :``}`;
+    return super.buildPath(resolved);
   }
 
   protected get headers(): Record<string, string> {
