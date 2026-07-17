@@ -1,4 +1,5 @@
 import { logger } from "../../utils/logger.js";
+import { logIssueList } from "../../utils/jiraLogUtils.js";
 import { getIssueNumberFromBranch } from "../../utils/utilsForServices.ts/gitServiceUtils.js";
 import { GitService } from "./git.service.js";
 import { ConfigService } from "../cli.services/config.service.js";
@@ -8,14 +9,14 @@ import type { JiraConfig } from "../../types/configs/client-configs.types.js";
 export class JiraService {
 
   private static _client: JiraClient | null = null;
-
+  private static config = ConfigService.readConfig();
   /**
    * Lazily initialised client. Reads config from disk on first call.
    */
   private static get client(): JiraClient {
     if (!this._client) {
-      const config = ConfigService.readConfig();
-      const jiraConfig = config?.Jira as JiraConfig | undefined;
+      // const config = ConfigService.readConfig();
+      const jiraConfig = this.config?.Jira as JiraConfig | undefined;
       if (!jiraConfig) {
         throw new Error("Jira is not configured. Run `automate` to set up your config.");
       }
@@ -27,9 +28,25 @@ export class JiraService {
   static async listIssues(args: { project: string }) {
     logger.info(`Listing Jira issues for project: ${args.project}`);
     const data = await this.client.get<{ issues: unknown[] }>(
-      `/search?jql=project=${encodeURIComponent(args.project)}`,
+      `/search?jql=project=${encodeURIComponent(args.project)} and assignee=CurrentUser() and issuetype not in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
     );
+
     logger.success(`Found ${data?.issues?.length} issue(s)`);
+
+    logIssueList(data.issues as any[]);
+
+    return data.issues;
+  }
+  static async listSubtasks(args: { project: string }) {
+    logger.info(`Listing Jira subtasks for project: ${args.project}`);
+    const data = await this.client.get<{ issues: unknown[] }>(
+      `/search?jql=project=${encodeURIComponent(args.project)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
+    );
+
+    logger.success(`Found ${data?.issues?.length} subtask(s)`);
+
+    logIssueList(data.issues as any[]);
+
     return data.issues;
   }
 
@@ -59,6 +76,53 @@ export class JiraService {
 
     const issue = await this.client.post<{ key: string }>("/issue", body);
     logger.plain(`✅ Issue created: ${issue.key}`);
+    return issue;
+  }
+
+  static async createSubtask(args: {
+    project: string;
+    parentIssueId: string;
+    title: string;
+    affectedArea: string;
+    team: string;
+    fixVersion?: string;
+    description?: string;
+  }) {
+    logger.info(`Creating subtask under ${args.parentIssueId} in project ${args.project}`);
+
+    // Build a rich description combining structured fields + optional user text
+    const descLines = [
+      `Affected Area: ${args.affectedArea}`,
+      `Team: ${args.team}`,
+      `Fix Version: ${args.fixVersion}`,
+    ];
+    if (args.description) {
+      descLines.push(`---`, args.description);
+    }
+
+    const body: Record<string, unknown> = {
+      fields: {
+        project: { key: args.project },
+        summary: args.title,
+        issuetype: { name: "Subtask" },
+        parent: { key: args.parentIssueId },
+        ...( this?.config?.jira?.hosting === 'cloud' ? null : {fixVersions: [{ name: args.fixVersion }]}),
+        labels: [args.affectedArea, args.team],
+        description: {
+          type: "doc",
+          version: 1,
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: descLines.join("\n") }],
+            },
+          ],
+        },
+      },
+    };
+
+    const issue = await this.client.post<{ key: string; id: string }>("/issue", body);
+    logger.plain(`✅ Subtask created: ${issue.key} under ${args.parentIssueId}`);
     return issue;
   }
 

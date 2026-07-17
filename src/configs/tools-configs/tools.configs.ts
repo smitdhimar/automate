@@ -1,7 +1,12 @@
 import { GitService } from "../../services/business.services/git.service.js"
 import { JiraService } from "../../services/business.services/jira.service.js"
+import { ConfigService } from "../../services/cli.services/config.service.js"
 import { BitbucketService } from "../../services/business.services/bitbucket.service.js"
 import { ToolDefinition } from "../../types/configs/ui-configs.types/tool-configs.types.js"
+import { JiraClient } from "../../clients/jira.client.js"
+
+const config = ConfigService.readConfig();
+const defaultProject = config?.Jira?.defaultProject;
 
 export const gitTools: ToolDefinition[] = [
     {
@@ -145,33 +150,70 @@ export const jiraTools: ToolDefinition[] = [
         id: "jira.listIssues",
         category: "Jira",
         name: "List Issues",
-        description: "List Jira issues for a project",
+        description: "List Jira issues assigned to you, which are not subtask, and are in 'To Do', 'In Progress', 'Under Review', 'Assigned' statuses.",
         arguments: [
             {
                 name: "project",
                 label: "Project Key",
                 type: "string",
-                required: true
+                required: true,
+                default: defaultProject
             }
         ],
         handler: JiraService.listIssues.bind(JiraService),
         listTool: true
     },
     {
-        id: "jira.createIssue",
+        id: "jira.listSubtasks",
         category: "Jira",
-        name: "Create Issue",
-        description: "Create a new Jira issue",
+        name: "List Subtasks",
+        description: "List Jira subtasks assigned to you and are in 'To Do', 'In Progress', 'Under Review', 'Assigned' statuses.",
         arguments: [
             {
                 name: "project",
                 label: "Project Key",
                 type: "string",
+                required: true,
+                default: defaultProject
+            }
+        ],
+        handler: JiraService.listSubtasks.bind(JiraService),
+        listTool: true
+    },
+    {
+        id: "jira.createSubtask",
+        category: "Jira",
+        name: "Create Subtask",
+        description: "Create a subtask under a parent issue with affected area, fix version, and team details.",
+        arguments: [
+            {
+                name: "project",
+                label: "Project Key",
+                type: "string",
+                required: true,
+                default: defaultProject
+            },
+            {
+                name: "parentIssueId",
+                label: "Parent Issue ID",
+                type: "string",
                 required: true
             },
             {
-                name: "summary",
-                label: "Summary",
+                name: "title",
+                label: "Title",
+                type: "string",
+                required: true
+            },
+            {
+                name: "affectedArea",
+                label: "Affected Area",
+                type: "string",
+                required: true
+            },
+            {
+                name: "team",
+                label: "Team",
                 type: "string",
                 required: true
             },
@@ -180,10 +222,16 @@ export const jiraTools: ToolDefinition[] = [
                 label: "Description",
                 type: "string",
                 required: false
+            },
+            {
+                name: "fixVersion",
+                label: "Fix Version",
+                type: "string",
+                required: false
             }
         ],
-        handler: JiraService.createIssue.bind(JiraService),
-        listTool: false
+        handler: JiraService.createSubtask.bind(JiraService),
+        listTool: true
     },
     // {
     //     id: "jira.listIssues",
@@ -224,6 +272,6 @@ export const bitbucketTools: ToolDefinition[] = [
 
 export const orderForTools = {
     "Git":['git.stash', 'git.addAll', 'git.commit', 'git.push', 'git.stashPop', 'git.fetch', 'git.checkout', 'git.status', 'git.pull', ],
-    "Jira":[],
+    "Jira":['jira.createSubtask', 'jira.listIssues', 'jira.listSubtasks'],
     "Bitbucket":[]
 }

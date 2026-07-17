@@ -27,6 +27,10 @@ export class JiraClient extends IProductClient {
       2: "/search",
       3: "/search/jql", // Cloud v3 moved the endpoint under /jql
     },
+    "/issue":{
+      2: "/issue",
+      3: "/issue"
+    }
   };
 
   constructor(private config: JiraConfig) {
@@ -56,7 +60,7 @@ export class JiraClient extends IProductClient {
     const pathSliced = path.split("?");
     const versionKey = this.config.hosting === "cloud" ? "3" : "2";
     const override = JiraClient.VERSION_PATHS[pathSliced[0]];
-    const resolved = override?.[versionKey] ?? path;
+    const resolved = `${override?.[versionKey]}${pathSliced?.length > 1 ? `?${pathSliced[1]}` :``}`;
     return super.buildPath(resolved);
   }
 

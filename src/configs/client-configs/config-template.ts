@@ -1,6 +1,7 @@
 export const DEFAULT_CONFIG = {
   "Jira": {
     "hosting": "cloud",
+    "defaultProject":"your-default-project",
     "cloud": {
       "site": "your-domain",
       "email": "your-email@example.com",
