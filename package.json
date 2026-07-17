@@ -21,8 +21,8 @@
   "author": "smitdhimar61",
   "license": "ISC",
   "dependencies": {
-    "inquirer": "^12.5.2",
-    "simple-git": "^3.36.0"
+    "inquirer": "12.5.2",
+    "simple-git": "3.36.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",

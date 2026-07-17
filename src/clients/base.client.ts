@@ -46,7 +46,6 @@ export abstract class IProductClient {
   }
 
   get<T = unknown>(path: string): Promise<T> {
-    console.log('this.buildPath(path) :>> ', this.buildPath(path));
     return this.http.get<T>(this.baseUrl, this.buildPath(path), this.headers);
   }
 
