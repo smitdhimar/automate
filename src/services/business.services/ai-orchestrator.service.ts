@@ -43,7 +43,7 @@ export class AIOrchestrator {
         while (iteration < MAX_ITERATIONS) {
             iteration++;
 
-            logger.info(`🤖 Thinking... (step ${iteration}/${MAX_ITERATIONS})`);
+            logger.info(`Thinking... (step ${iteration}/${MAX_ITERATIONS})`);
 
             const response = await llm.chat(messages, llmTools);
             const choice = response.choices[0];
