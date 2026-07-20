@@ -5,6 +5,7 @@ import { GitService } from "./git.service.js";
 import { ConfigService } from "../cli.services/config.service.js";
 import { JiraClient } from "../../clients/jira.client.js";
 import type { JiraConfig } from "../../types/configs/client-configs.types.js";
+import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
 
 export class JiraService {
 
@@ -15,7 +16,6 @@ export class JiraService {
    */
   private static get client(): JiraClient {
     if (!this._client) {
-      // const config = ConfigService.readConfig();
       const jiraConfig = this.config?.Jira as JiraConfig | undefined;
       if (!jiraConfig) {
         throw new Error("Jira is not configured. Run `automate` to set up your config.");
@@ -25,58 +25,69 @@ export class JiraService {
     return this._client;
   }
 
-  static async listIssues(args: { project: string }) {
-    logger.info(`Listing Jira issues for project: ${args.project}`);
-    const data = await this.client.get<{ issues: unknown[] }>(
-      `/search?jql=project=${encodeURIComponent(args.project)} and assignee=CurrentUser() and issuetype not in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
-    );
+  static async listIssues(args: { project: string }): Promise<ToolResult> {
+    try {
+      logger.info(`Listing Jira issues for project: ${args.project}`);
+      const data = await this.client.get<{ issues: unknown[] }>(
+        `/search?jql=project=${encodeURIComponent(args.project)} and assignee=CurrentUser() and issuetype not in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
+      );
 
-    logger.success(`Found ${data?.issues?.length} issue(s)`);
+      logger.success(`Found ${data?.issues?.length} issue(s)`);
+      logIssueList(data.issues as any[]);
 
-    logIssueList(data.issues as any[]);
-
-    return data.issues;
-  }
-  static async listSubtasks(args: { project: string }) {
-    logger.info(`Listing Jira subtasks for project: ${args.project}`);
-    const data = await this.client.get<{ issues: unknown[] }>(
-      `/search?jql=project=${encodeURIComponent(args.project)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
-    );
-
-    logger.success(`Found ${data?.issues?.length} subtask(s)`);
-
-    logIssueList(data.issues as any[]);
-
-    return data.issues;
-  }
-
-  static async createIssue(args: { project: string; summary: string; description?: string }) {
-    logger.info(`Creating Jira issue in ${args.project}: ${args.summary}`);
-
-    const body: Record<string, unknown> = {
-      fields: {
-        project: { key: args.project },
-        summary: args.summary,
-        issuetype: { name: "Task" },
-      },
-    };
-
-    if (args.description) {
-      (body.fields as Record<string, unknown>).description = {
-        type: "doc",
-        version: 1,
-        content: [
-          {
-            type: "paragraph",
-            content: [{ type: "text", text: args.description }],
-          },
-        ],
-      };
+      return { success: true, data: { issues: data.issues } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
     }
+  }
 
-    const issue = await this.client.post<{ key: string }>("/issue", body);
-    logger.plain(`✅ Issue created: ${issue.key}`);
-    return issue;
+  static async listSubtasks(args: { project: string }): Promise<ToolResult> {
+    try {
+      logger.info(`Listing Jira subtasks for project: ${args.project}`);
+      const data = await this.client.get<{ issues: unknown[] }>(
+        `/search?jql=project=${encodeURIComponent(args.project)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
+      );
+
+      logger.success(`Found ${data?.issues?.length} subtask(s)`);
+      logIssueList(data.issues as any[]);
+
+      return { success: true, data: { issues: data.issues } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  static async createIssue(args: { project: string; summary: string; description?: string }): Promise<ToolResult> {
+    try {
+      logger.info(`Creating Jira issue in ${args.project}: ${args.summary}`);
+
+      const body: Record<string, unknown> = {
+        fields: {
+          project: { key: args.project },
+          summary: args.summary,
+          issuetype: { name: "Task" },
+        },
+      };
+
+      if (args.description) {
+        (body.fields as Record<string, unknown>).description = {
+          type: "doc",
+          version: 1,
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: args.description }],
+            },
+          ],
+        };
+      }
+
+      const issue = await this.client.post<{ key: string }>("/issue", body);
+      logger.plain(`✅ Issue created: ${issue.key}`);
+      return { success: true, data: { key: issue.key } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
   }
 
   static async createSubtask(args: {
@@ -87,54 +98,56 @@ export class JiraService {
     team: string;
     fixVersion?: string;
     description?: string;
-  }) {
-    logger.info(`Creating subtask under ${args.parentIssueId} in project ${args.project}`);
+  }): Promise<ToolResult> {
+    try {
+      logger.info(`Creating subtask under ${args.parentIssueId} in project ${args.project}`);
 
-    // Build a rich description combining structured fields + optional user text
-    const descLines = [
-      `Affected Area: ${args.affectedArea}`,
-      `Team: ${args.team}`,
-      `Fix Version: ${args.fixVersion}`,
-    ];
-    if (args.description) {
-      descLines.push(`---`, args.description);
-    }
-
-    const body: Record<string, unknown> = {
-      fields: {
-        project: { key: args.project },
-        summary: args.title,
-        issuetype: { name: "Subtask" },
-        parent: { key: args.parentIssueId },
-        ...( this?.config?.jira?.hosting === 'cloud' ? null : {fixVersions: [{ name: args.fixVersion }]}),
-        labels: [args.affectedArea, args.team],
-        description: {
-          type: "doc",
-          version: 1,
-          content: [
-            {
-              type: "paragraph",
-              content: [{ type: "text", text: descLines.join("\n") }],
-            },
-          ],
+      const body: Record<string, unknown> = {
+        fields: {
+          project: { key: args.project },
+          summary: args.title,
+          issuetype: { name: "Subtask" },
+          parent: { key: args.parentIssueId },
+          ...( this?.config?.jira?.hosting === 'cloud' ? null : {fixVersions: [{ name: args.fixVersion }]}),
+          labels: [args.affectedArea, args.team],
+          description: {
+            type: "doc",
+            version: 1,
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: args?.description }],
+              },
+            ],
+          },
         },
-      },
-    };
+      };
 
-    const issue = await this.client.post<{ key: string; id: string }>("/issue", body);
-    logger.plain(`✅ Subtask created: ${issue.key} under ${args.parentIssueId}`);
-    return issue;
+      const issue = await this.client.post<{ key: string; id: string }>("/issue", body);
+      logger.plain(`✅ Subtask created: ${issue.key} under ${args.parentIssueId}`);
+      return { success: true, data: { key: issue.key, parent: args.parentIssueId } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
   }
 
   // get status of subtask from branch number
-  static async getStatus(): Promise<string> {
-    const branch = await GitService.getBranchName();
-    const issueNumber = getIssueNumberFromBranch(branch);
+  static async getStatus(): Promise<ToolResult> {
+    try {
+      const branchResult = await GitService.getBranchName();
+      if (!branchResult.success || !branchResult.data?.branch) {
+        return { success: false, error: "Could not determine current branch name" };
+      }
+      const branch = branchResult.data.branch;
+      const issueNumber = getIssueNumberFromBranch(branch);
 
-    const data = await this.client.get<{ fields: { status: { name: string } } }>(
-      `/issue/${issueNumber}`,
-    );
-    logger.plain(`✅ Status for ${issueNumber}: ${data.fields.status.name}`);
-    return data.fields.status.name;
+      const data = await this.client.get<{ fields: { status: { name: string } } }>(
+        `/issue/${issueNumber}`,
+      );
+      logger.plain(`✅ Status for ${issueNumber}: ${data.fields.status.name}`);
+      return { success: true, data: { issueNumber, status: data.fields.status.name } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
   }
 }

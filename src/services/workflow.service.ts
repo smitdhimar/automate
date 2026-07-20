@@ -17,11 +17,11 @@ export class WorkflowService {
         const actions: string[] = JSON.parse(file);
 
         for (const action of actions) {
-
             console.log(`Running ${action}`);
-
-            await ToolRegistry.execute(action);
-
+            const result = await ToolRegistry.execute(action);
+            if (!result?.success) {
+                console.error(`  ✗ Failed: ${result?.error}`);
+            }
         }
     }
 }

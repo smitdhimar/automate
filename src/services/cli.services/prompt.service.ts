@@ -64,4 +64,21 @@ export class PromptService {
         const answers = await inquirer.prompt(questions);
         return answers;
     }
+
+    /**
+     * Collect a natural-language prompt from the user for the AI Assistant.
+     */
+    static async collectPrompt(): Promise<string | null> {
+        const { prompt } = await inquirer.prompt([
+            {
+                type: "input",
+                name: "prompt",
+                message: "What do you want to do?",
+                theme: Theme,
+                validate: (input: string) =>
+                    input.trim().length > 0 ? true : "Please enter a prompt",
+            },
+        ]);
+        return prompt?.trim() || null;
+    }
 }

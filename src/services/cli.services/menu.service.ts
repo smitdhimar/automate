@@ -3,19 +3,37 @@ import { PromptService } from "./prompt.service.js";
 import { logger } from "../../utils/logger.js";
 import { withLoader } from "../../utils/spinner.js";
 import { ConfigService } from "./config.service.js";
+import { AIOrchestrator } from "../business.services/ai-orchestrator.service.js";
+
+const AI_CATEGORY = "askAi";
 
 export class MenuService {
 
     static async start() {
 
         while (true) {
-            // 1. Get all categories from the registry
-            const categories = ToolRegistry.getCategories();
+            // 1. Get all categories from the registry + AI Assistant
+            const categories = [...ToolRegistry.getCategories(), AI_CATEGORY];
 
             // 2. Let user pick a category
             const selectedCategory = await PromptService.selectCategory(categories);
             if (!selectedCategory) break; // user chose exit
 
+            // --- AI Assistant path ---
+            if (selectedCategory === AI_CATEGORY) {
+                const prompt = await PromptService.collectPrompt();
+                if (!prompt) continue; // user went back
+
+                try {
+                    await withLoader(() => AIOrchestrator.run(prompt));
+                    logger.success("AI assistant completed");
+                } catch (err) {
+                    logger.error(`AI assistant failed: ${err}`);
+                }
+                continue;
+            }
+
+            // --- Normal tool path ---
             if(!ConfigService.isServiceCredsConfigured(selectedCategory)){
                 logger.warn(`No configuration found for category ${selectedCategory}. Try adding your credentials at ${ConfigService.configPath}`);
                 continue;
@@ -35,10 +53,14 @@ export class MenuService {
 
             // 7. Execute with loading spinner
             try {
-                await withLoader(() =>
+                const result = await withLoader(() =>
                     ToolRegistry.execute(selectedToolId, args)
                 );
-                logger.success(`${tool.name} completed`);
+                if (result?.success) {
+                    logger.success(`${tool.name} completed`);
+                } else {
+                    logger.error(`${tool.name} failed: ${result?.error || "Unknown error"}`);
+                }
             } catch (err) {
                 logger.error(`${tool.name} failed: ${err}`);
             }
