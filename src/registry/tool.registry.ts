@@ -1,5 +1,5 @@
-import type { ToolDefinition } from "../types/configs/ui-configs.types/tool-configs.types.js";
-import { gitTools, jiraTools, orderForTools as order} from "../configs/tools-configs/tools.configs.js";
+import type { ToolDefinition, ToolResult } from "../types/configs/ui-configs.types/tool-configs.types.js";
+import { gitTools, jiraTools, userInteractionTools, orderForTools as order} from "../configs/tools-configs/tools.configs.js";
 import { sortToolsByOrder } from "../utils/sortTools.js";
 
 export class ToolRegistry {
@@ -31,12 +31,21 @@ export class ToolRegistry {
         return this.tools.get(id);
     }
 
-    static async execute(id: string, args: Record<string, any> = {}): Promise<void> {
+    /**
+     * Returns all registered tools (including hidden ones) as full definitions.
+     * Used by the AI orchestrator to build the LLM function-calling schema.
+     */
+    static getAllTools(): ToolDefinition[] {
+        return Array.from(this.tools.values());
+    }
+
+    static async execute(id: string, args: Record<string, any> = {}): Promise<ToolResult> {
         const tool = this.tools.get(id);
         if (!tool) {
             throw new Error(`Tool "${id}" not found`);
         }
-        await tool.handler(args);
+        const result = await tool.handler(args);
+        return result;
     }
 }
 
@@ -46,9 +55,15 @@ export const registerTools=() => {
     const jiraToolsSorted = sortToolsByOrder(jiraTools, order?.Jira);
     // const bitbucketToolsSorted = sortToolsByOrder()
 
+    // Register menu-visible tools
     [...gitToolsSorted, ...jiraToolsSorted]?.map((tool: ToolDefinition)=>{
         if(tool.listTool){
             ToolRegistry.register(tool);
         }
-    })
+    });
+
+    // Register hidden tools (LLM-only: user interaction tools, bitbucket tools, etc.)
+    [...userInteractionTools]?.map((tool: ToolDefinition) => {
+        ToolRegistry.register(tool);
+    });
 }

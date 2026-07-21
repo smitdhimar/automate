@@ -64,4 +64,20 @@ export class PromptService {
         const answers = await inquirer.prompt(questions);
         return answers;
     }
+
+    /**
+     * Collect a natural-language prompt from the user for the AI Assistant.
+     * Returns null if the user provided empty input (to go back).
+     */
+    static async collectPrompt(): Promise<string | null> {
+        const { prompt } = await inquirer.prompt([
+            {
+                type: "input",
+                name: "prompt",
+                message: "What do you want to do? (press Enter to go back)",
+                theme: Theme,
+            },
+        ]);
+        return prompt?.trim() || null;
+    }
 }

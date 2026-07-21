@@ -10,11 +10,19 @@ export interface ToolDefinition {
 
     arguments: ToolArgument[]; // list of args
 
-    handler(args: Record<string, any>): Promise<void | unknown>; // the handler
+    handler(args: Record<string, any>): Promise<ToolResult>; // the handler
     
     listTool: boolean;  // whether to list the tool or not 
 
     helperStr?: string;
+}
+
+export interface ToolResult {
+    success: boolean;
+
+    data?: any;
+
+    error?: string
 }
 
 export interface ToolArgument {

@@ -25,5 +25,11 @@ export const DEFAULT_CONFIG = {
       "username": "your-username",
       "password": "your-password"
     }
+  },
+  "LLM": {
+    "provider": "deepseek",
+    "apiKey": "your-llm-api-key",
+    "model": "deepseek-chat",
+    "baseUrl": "https://api.deepseek.com"
   }
 };

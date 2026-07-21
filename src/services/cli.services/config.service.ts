@@ -64,10 +64,19 @@ export class ConfigService {
       return false;
     }
 
+    const config = this.readConfig();
+
+    // LLM has a flat structure — no hosting sub-config
+    if (serviceName === "LLM") {
+      const llm = config?.LLM as Record<string, string> | undefined;
+      if (!llm) return false;
+      if (!llm.apiKey || llm.apiKey.includes("your-")) return false;
+      return true;
+    }
+
     const defaults = (DEFAULT_CONFIG as Record<string, any>)[serviceName];
     if (!defaults) return true; // unknown service
 
-    const config = this.readConfig();
     const userSection = config?.[serviceName];
     if (!userSection || typeof userSection !== "object") return false;
 
