@@ -24,6 +24,52 @@ export class UserInteractionService {
     }
 
     /**
+     * Prompts the user with two staging options:
+     * 1. Stage all files (git add .)
+     * 2. Stage files manually and confirm when ready
+     *
+     * Used by the LLM orchestrator when files need to be staged before committing.
+     */
+    static async stageFiles(): Promise<ToolResult> {
+        const { method } = await inquirer.prompt([
+            {
+                type: "list",
+                name: "method",
+                message: "Files need to be staged before committing. How would you like to proceed?",
+                choices: [
+                    { name: "Stage all files (git add .)", value: "all" },
+                    { name: "I'll stage files manually and confirm when ready", value: "manual" },
+                ],
+            },
+        ]);
+
+        if (method === "all") {
+            logger.info("Staging all files...");
+            const result = await GitService.addAll();
+            if (!result.success) {
+                return { success: false, error: `Failed to stage files: ${result.error}` };
+            }
+            return { success: true, data: { method: "all", staged: true } };
+        }
+
+        // Manual staging: wait for user confirmation
+        const { ready } = await inquirer.prompt([
+            {
+                type: "confirm",
+                name: "ready",
+                message: "Have you staged your files? Confirm to proceed with commit.",
+                default: false,
+            },
+        ]);
+
+        if (!ready) {
+            return { success: false, error: "User cancelled — files were not staged." };
+        }
+
+        return { success: true, data: { method: "manual", staged: true } };
+    }
+
+    /**
      * Auto-stages all files via `git add .`.
      * Alternative to user manually staging and confirming.
      */
