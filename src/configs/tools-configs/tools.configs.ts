@@ -4,6 +4,7 @@ import { ConfigService } from "../../services/cli.services/config.service.js"
 import { BitbucketService } from "../../services/business.services/bitbucket.service.js"
 import { ToolDefinition } from "../../types/configs/ui-configs.types/tool-configs.types.js"
 import { UserInteractionService } from "../../services/business.services/user-interaction.service.js"
+import { CustomCommandService } from "../../services/business.services/custom-command.service.js"
 
 const config = ConfigService.readConfig();
 const defaultProject = config?.Jira?.defaultProject;
@@ -305,17 +306,27 @@ export const userInteractionTools: ToolDefinition[] = [
         arguments: [],
         handler: UserInteractionService.stageFiles.bind(UserInteractionService),
         listTool: false,
-    },
-    {
-        id: "user_addAll",
-        category: "User",
-        name: "Stage All Files",
-        description: "Stage all changed files via git add . so they are ready to commit. Prefer user_stageFiles instead, which gives the user a choice.",
-        arguments: [],
-        handler: UserInteractionService.addAll.bind(UserInteractionService),
-        listTool: false,
-    },
+    }
 ]
+
+// export const customCommandTools: ToolDefinition[] = [
+//     {
+//         id: "custom_command",
+//         category: "Command",
+//         name: "Command",
+//         description: "Ask user for their custom command",
+//         arguments: [
+//             {
+//                 name: "customCommand",
+//                 label: "Command",
+//                 type: "string",
+//                 required: true,
+//             },
+//         ],
+//         handler: CustomCommandService.execute.bind(CustomCommandService),
+//         listTool: true,
+//     }
+// ]
 
 export const orderForTools = {
     "Git":['git_stash', 'git_addAll', 'git_commit', 'git_push', 'git_stashPop', 'git_fetch', 'git_checkout', 'git_status', 'git_pull', ],
