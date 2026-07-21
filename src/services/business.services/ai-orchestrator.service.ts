@@ -17,7 +17,7 @@ const SYSTEM_PROMPT = `You are a developer automation assistant. You have access
 4. Always use tool call outputs as inputs for subsequent tool calls (e.g., use the subtask key from jira_createSubtask to create a branch).
 5. If a tool fails, report the error clearly and suggest what to try next.
 6. Before doing destructive operations (push, commit without message), ask the user to confirm.
-7. For staging files, always use user_stageFiles — it gives the user the choice to stage all or stage manually. Do NOT use user_addAll directly for staging during a workflow.
+7. For staging files, always use user_stageFiles — it gives the user the choice to stage all or stage manually.
 8. Keep responses concise — the user is in a terminal.`;
 
 export class AIOrchestrator {

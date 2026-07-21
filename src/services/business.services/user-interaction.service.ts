@@ -68,13 +68,4 @@ export class UserInteractionService {
 
         return { success: true, data: { method: "manual", staged: true } };
     }
-
-    /**
-     * Auto-stages all files via `git add .`.
-     * Alternative to user manually staging and confirming.
-     */
-    static async addAll(): Promise<ToolResult> {
-        logger.info("Staging all files...");
-        return await GitService.addAll();
-    }
 }
