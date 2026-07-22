@@ -11,7 +11,7 @@ const SYSTEM_PROMPT = `You are a developer automation assistant. You have access
 
 ## Rules
 1. When the user says "checkout and push" or similar, use this sequence: 
-   git_stash → git_fetch (for the target branch) → git_checkout → git_stashPop → user_stageFiles → git_commit → git_push
+   git_stash → git_checkout → git_stashPop → user_stageFiles → git_commit → git_push
 2. When creating a subtask: first list the parent issue if the user doesn't specify it, then create the subtask.
 3. After creating a subtask, offer to create a branch for it (bitbucket_createBranch with the subtask key as issueNumber).
 4. Always use tool call outputs as inputs for subsequent tool calls (e.g., use the subtask key from jira_createSubtask to create a branch).

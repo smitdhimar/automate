@@ -5,7 +5,7 @@ import type { ToolResult } from "../../types/configs/ui-configs.types/tool-confi
 const git = simpleGit();
 
 export class GitService {
-
+    
     // gets the status of repo
     static async status(_args?: Record<string, any>): Promise<ToolResult> {
         try {
@@ -16,18 +16,25 @@ export class GitService {
             return { success: false, error: e.message };
         }
     }
-
+    
     // checks out to specified branch
-    static async checkout(args: { branch: string }): Promise<ToolResult> {
+    static async checkout(args: { branch: string, origin?: string }): Promise<ToolResult> {
         try {
-            await git.checkout(args.branch);
-            logger.success(`Switched to branch: ${args.branch}`);
+            const result = await git.branch();
+            const branches = result?.all;
+            if(!branches.includes(args.branch)){
+                await git.fetch(args.origin || 'origin', args.branch);
+            }
+            const checkoutResponse = await git.checkout(args.branch);
+
+            logger.plain(checkoutResponse);
+
             return { success: true, data: { branch: args.branch } };
         } catch (e: any) {
             return { success: false, error: e.message };
         }
     }
-
+    
     // pull from specific origin branch
     static async pullFrom(args: { branch: string, origin?: string }): Promise<ToolResult> {
         try {
@@ -61,16 +68,6 @@ export class GitService {
         }
     }
 
-    // git fetch origin branch-name
-    static async fetchFrom(args: {branch: string}): Promise<ToolResult> {
-        try {
-            const response = await git.fetch('origin', args.branch);
-            logger.plain(response);
-            return { success: true, data: { branch: args.branch } };
-        } catch (e: any) {
-            return { success: false, error: e.message };
-        }
-    }
 
     // git push
     static async push(): Promise<ToolResult> {

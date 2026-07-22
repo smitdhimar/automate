@@ -24,8 +24,15 @@ export const gitTools: ToolDefinition[] = [
         id: "git_checkout",
         category: "Git",
         name: "Checkout Branch",
-        description: "Checkout a branch",
+        description: "Checkout a branch ( fetches if not in local )",
         arguments: [
+            {
+                name: "origin",
+                label: "Origin",
+                type: "string",
+                required: false,
+                default: 'origin'  
+            },
             {
                 name: "branch",
                 label: "Branch Name",
@@ -92,30 +99,6 @@ export const gitTools: ToolDefinition[] = [
         handler: GitService.pullFrom,
         listTool: true,
         helperStr: "git pull <origin> <branch-name>"
-    },
-    {
-        id: "git_fetch",
-        category: "Git",
-        name: "Fetch",
-        description: "Fetch from specified branch",
-        arguments: [
-            {
-                name: "origin",
-                label: "Origin",
-                type: "string",
-                required: false,
-                default: 'origin'  
-            },
-            {
-                name: "branch",
-                label: "Branch Name",
-                type: "string",
-                required: true
-            }
-        ],
-        handler: GitService.fetchFrom,
-        listTool: true,
-        helperStr: "git fetch <origin> <branch-name>"
     },
     {
         id: "git_addAll",
@@ -243,23 +226,7 @@ export const jiraTools: ToolDefinition[] = [
         ],
         handler: JiraService.createSubtask.bind(JiraService),
         listTool: true
-    },
-    // {
-    //     id: "jira_listIssues",
-    //     category: "Jira",
-    //     name: "List Issues",
-    //     description: "List Jira issues for a project",
-    //     arguments: [
-    //         {
-    //             name: "project",
-    //             label: "Project Key",
-    //             type: "string",
-    //             required: true
-    //         }
-    //     ],
-    //     handler: JiraService.getStatus,
-    //     listTool: false
-    // }
+    }
 ]
 
 export const bitbucketTools: ToolDefinition[] = [
@@ -309,27 +276,9 @@ export const userInteractionTools: ToolDefinition[] = [
     }
 ]
 
-// export const customCommandTools: ToolDefinition[] = [
-//     {
-//         id: "custom_command",
-//         category: "Command",
-//         name: "Command",
-//         description: "Ask user for their custom command",
-//         arguments: [
-//             {
-//                 name: "customCommand",
-//                 label: "Command",
-//                 type: "string",
-//                 required: true,
-//             },
-//         ],
-//         handler: CustomCommandService.execute.bind(CustomCommandService),
-//         listTool: true,
-//     }
-// ]
 
 export const orderForTools = {
-    "Git":['git_stash', 'git_addAll', 'git_commit', 'git_push', 'git_stashPop', 'git_fetch', 'git_checkout', 'git_status', 'git_pull', ],
+    "Git":['git_stash', 'git_addAll', 'git_commit', 'git_push', 'git_stashPop', 'git_checkout', 'git_status', 'git_pull', ],
     "Jira":['jira_createSubtask', 'jira_listIssues', 'jira_listSubtasks'],
     "Bitbucket":[]
 }
