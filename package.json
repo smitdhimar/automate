@@ -1,6 +1,6 @@
 {
   "name": "automate-cli",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A CLI tool for handling Jira, Bitbucket, Git ops, and day-to-day workflows",
   "type": "module",
   "main": "dist/index.js",

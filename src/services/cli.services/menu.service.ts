@@ -4,8 +4,10 @@ import { logger } from "../../utils/logger.js";
 import { withLoader } from "../../utils/spinner.js";
 import { ConfigService } from "./config.service.js";
 import { AIOrchestrator } from "../business.services/ai-orchestrator.service.js";
+import { CustomCommandService } from "../business.services/custom-command.service.js";
 
 const AI_CATEGORY = "askAi";
+const CUSTOM_COMMAND_CATEGORY="Command"
 
 export class MenuService {
 
@@ -13,24 +15,37 @@ export class MenuService {
 
         while (true) {
             // 1. Get all categories from the registry + AI Assistant
-            const categories = [...ToolRegistry.getCategories(), AI_CATEGORY];
+            const categories = [...ToolRegistry.getCategories(), AI_CATEGORY, CUSTOM_COMMAND_CATEGORY];
 
             // 2. Let user pick a category
             const selectedCategory = await PromptService.selectCategory(categories);
             if (!selectedCategory) break; // user chose exit
 
             // --- AI Assistant path ---
+            switch(selectedCategory){
+                case AI_CATEGORY:
+                    const prompt = await PromptService.collectAnswer("What do you want to do? (press Enter to go back)");
+                    if (!prompt) continue; // user went back
+        
+                    try {
+                        await withLoader(() => AIOrchestrator.run(prompt));
+                        logger.success("AI assistant completed");
+                    } catch (err) {
+                        logger.error(`AI assistant failed: ${err}`);
+                    }
+                    continue;
+                case CUSTOM_COMMAND_CATEGORY:
+                    const command = await PromptService.collectAnswer("Enter your command: ");
+                    if (!command) continue;
+                    try {
+                        await withLoader(async () => { await CustomCommandService.execute({ command }) }); 
+                    }
+                    catch (err){
+                        logger.error(`Failed to execute custom command: ${command}`);
+                    }
+                    continue;
+            }   
             if (selectedCategory === AI_CATEGORY) {
-                const prompt = await PromptService.collectPrompt();
-                if (!prompt) continue; // user went back
-
-                try {
-                    await withLoader(() => AIOrchestrator.run(prompt));
-                    logger.success("AI assistant completed");
-                } catch (err) {
-                    logger.error(`AI assistant failed: ${err}`);
-                }
-                continue;
             }
 
             // --- Normal tool path ---

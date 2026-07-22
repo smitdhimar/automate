@@ -4,6 +4,7 @@ import { ConfigService } from "../../services/cli.services/config.service.js"
 import { BitbucketService } from "../../services/business.services/bitbucket.service.js"
 import { ToolDefinition } from "../../types/configs/ui-configs.types/tool-configs.types.js"
 import { UserInteractionService } from "../../services/business.services/user-interaction.service.js"
+import { CustomCommandService } from "../../services/business.services/custom-command.service.js"
 
 const config = ConfigService.readConfig();
 const defaultProject = config?.Jira?.defaultProject;
@@ -23,8 +24,15 @@ export const gitTools: ToolDefinition[] = [
         id: "git_checkout",
         category: "Git",
         name: "Checkout Branch",
-        description: "Checkout a branch",
+        description: "Checkout a branch ( fetches if not in local )",
         arguments: [
+            {
+                name: "origin",
+                label: "Origin",
+                type: "string",
+                required: false,
+                default: 'origin'  
+            },
             {
                 name: "branch",
                 label: "Branch Name",
@@ -91,30 +99,6 @@ export const gitTools: ToolDefinition[] = [
         handler: GitService.pullFrom,
         listTool: true,
         helperStr: "git pull <origin> <branch-name>"
-    },
-    {
-        id: "git_fetch",
-        category: "Git",
-        name: "Fetch",
-        description: "Fetch from specified branch",
-        arguments: [
-            {
-                name: "origin",
-                label: "Origin",
-                type: "string",
-                required: false,
-                default: 'origin'  
-            },
-            {
-                name: "branch",
-                label: "Branch Name",
-                type: "string",
-                required: true
-            }
-        ],
-        handler: GitService.fetchFrom,
-        listTool: true,
-        helperStr: "git fetch <origin> <branch-name>"
     },
     {
         id: "git_addAll",
@@ -242,23 +226,7 @@ export const jiraTools: ToolDefinition[] = [
         ],
         handler: JiraService.createSubtask.bind(JiraService),
         listTool: true
-    },
-    // {
-    //     id: "jira_listIssues",
-    //     category: "Jira",
-    //     name: "List Issues",
-    //     description: "List Jira issues for a project",
-    //     arguments: [
-    //         {
-    //             name: "project",
-    //             label: "Project Key",
-    //             type: "string",
-    //             required: true
-    //         }
-    //     ],
-    //     handler: JiraService.getStatus,
-    //     listTool: false
-    // }
+    }
 ]
 
 export const bitbucketTools: ToolDefinition[] = [
@@ -305,20 +273,12 @@ export const userInteractionTools: ToolDefinition[] = [
         arguments: [],
         handler: UserInteractionService.stageFiles.bind(UserInteractionService),
         listTool: false,
-    },
-    {
-        id: "user_addAll",
-        category: "User",
-        name: "Stage All Files",
-        description: "Stage all changed files via git add . so they are ready to commit. Prefer user_stageFiles instead, which gives the user a choice.",
-        arguments: [],
-        handler: UserInteractionService.addAll.bind(UserInteractionService),
-        listTool: false,
-    },
+    }
 ]
 
+
 export const orderForTools = {
-    "Git":['git_stash', 'git_addAll', 'git_commit', 'git_push', 'git_stashPop', 'git_fetch', 'git_checkout', 'git_status', 'git_pull', ],
+    "Git":['git_stash', 'git_addAll', 'git_commit', 'git_push', 'git_stashPop', 'git_checkout', 'git_status', 'git_pull', ],
     "Jira":['jira_createSubtask', 'jira_listIssues', 'jira_listSubtasks'],
     "Bitbucket":[]
 }

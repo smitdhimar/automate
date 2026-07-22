@@ -131,7 +131,6 @@ Once running, follow the interactive prompts:
     Commit          — Commit with issue number & message
     Push            — Push to current branch
     Pull            — Pull from specified branch
-    Fetch           — Fetch from specified branch
     Stash           — Take a stash
     Stash Pop       — Stash pop
     ← Go back
@@ -158,7 +157,6 @@ Each Git operation in the menu maps to a real `git` command under the hood:
 | **Stash Pop**    | `git stash pop`                            | Restore stashed changes back to working tree |
 | **Push**         | `git push`                                 | Push commits to the current remote branch |
 | **Pull**         | `git pull origin <branch>`                 | Fetch from and integrate with a remote branch |
-| **Fetch**        | `git fetch origin <branch>`                | Download objects and refs from a remote  |
 | **Commit**       | `git commit -m "<branch-name> <message>"` | Commit staged changes with branch name prefixed |
 
 > 💡 **Commit note:** When using the Commit tool, the current branch name is automatically prefixed to your commit message (e.g., `git commit -m "feature/TICKET-123 Add login page"`).
