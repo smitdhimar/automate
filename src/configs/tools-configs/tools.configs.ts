@@ -102,12 +102,12 @@ export const gitTools: ToolDefinition[] = [
         helperStr: "git pull <origin> <branch-name>"
     },
     {
-        id: "git_addAll",
+        id: "git_add",
         category: "Git",
-        name: "addAll",
+        name: "add",
         description: "Stage all changes",
         arguments:[],
-        handler: GitService.addAll,
+        handler: GitService.add,
         listTool: true,
         helperStr: "git add ."
     },
@@ -287,7 +287,7 @@ export const userInteractionTools: ToolDefinition[] = [
         id: "user_stageFiles",
         category: "User",
         name: "Stage Files",
-        description: "Prompt the user for how to stage files. Gives two options: 'Stage all files' (git add .) or 'I'll stage manually and confirm when ready'. Use this whenever files need to be staged before a commit — do NOT try to combine user_confirm + user_addAll for staging.",
+        description: "Prompt the user for how to stage files. Gives two options: 'Stage all files' (git add .) or 'I'll stage manually and confirm when ready'. Use this whenever files need to be staged before a commit — do NOT try to combine user_confirm + user_add for staging.",
         arguments: [],
         handler: UserInteractionService.stageFiles.bind(UserInteractionService),
         listTool: false,
@@ -296,7 +296,7 @@ export const userInteractionTools: ToolDefinition[] = [
 
 
 export const orderForTools = {
-    "Git":['git_stash', 'git_addAll', 'git_commit', 'git_push', 'git_stashPop', 'git_checkout', 'git_status', 'git_pull', ],
+    "Git":['git_stash', 'git_add', 'git_commit', 'git_push', 'git_stashPop', 'git_checkout', 'git_status', 'git_pull', ],
     "Jira":['jira_createSubtask', 'jira_listIssues', 'jira_listSubtasks'],
     "Bitbucket":[]
 }

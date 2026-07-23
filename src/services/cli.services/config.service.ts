@@ -74,6 +74,11 @@ export class ConfigService {
       return true;
     }
 
+    if(serviceName === "Git" ){
+      // Git has no hosting sub-config also given properties are not required to be configured. 
+      return true
+    }
+
     const defaults = (DEFAULT_CONFIG as Record<string, any>)[serviceName];
     if (!defaults) return true; // unknown service
 

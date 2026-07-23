@@ -30,6 +30,8 @@ export class UserInteractionService {
      *
      * Used by the LLM orchestrator when files need to be staged before committing.
      */
+
+    // refator stagefiles function. 
     static async stageFiles(): Promise<ToolResult> {
         const { method } = await inquirer.prompt([
             {
@@ -44,8 +46,8 @@ export class UserInteractionService {
         ]);
 
         if (method === "all") {
-            logger.info("Staging all files...");
-            const result = await GitService.addAll();
+            logger.info("Staging files...");
+            const result = await GitService.add();
             if (!result.success) {
                 return { success: false, error: `Failed to stage files: ${result.error}` };
             }
