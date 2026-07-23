@@ -136,6 +136,23 @@ export const gitTools: ToolDefinition[] = [
         handler: GitService.getBranchName,
         listTool: true,
         helperStr: "git branch --show-current"
+    },
+    {
+        id: "git_diff",
+        category: "Git",
+        name: "Diff",
+        description: "Show diff with color-coded output (red for removals, green for additions)",
+        arguments: [
+            {
+                name: "target",
+                label: "Target (branch or file)",
+                type: "string",
+                required: false
+            }
+        ],
+        handler: GitService.diff,
+        listTool: true,
+        helperStr: "git diff"
     }
 ]
 

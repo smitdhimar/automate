@@ -14,10 +14,12 @@ const yellow = "\x1b[33m";
 const red = "\x1b[31m";
 const white = "\x1b[37m";
 const magenta = "\x1b[35m";
+const black = "\x1b[30m"
 
 // Background colors
 // const bgBlue = "\x1b[44m";
-
+const bgRed = "\x1b[41m";
+const bgGreen = "\x1b[102m";
 
 const Theme: themeType = {
   prefix: {
@@ -69,6 +71,7 @@ const navigation = {
 const colors = {
   reset, dim, bold,
   blue, brightBlue, cyan, green, yellow, red, white, magenta,
+  bgRed, bgGreen, black
 };
 
 export { Theme, reset, navigation, colors };

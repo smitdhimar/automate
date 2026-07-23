@@ -101,6 +101,46 @@ export class GitService {
         }
     }
 
+    // show git diff with color-coded output (red for removals, green for additions)
+    static async diff(args: { target?: string}): Promise<ToolResult> {
+        try {
+            const diffArgs: string[] = [];
+            if (args?.target) diffArgs.push(args.target);
+
+            const diffOutput = await git.diff(diffArgs);
+
+            if (!diffOutput) {
+                logger.plain("No changes to display.");
+                return { success: true, data: { diff: "" } };
+            }
+
+            // Colorize each line based on its first character
+            const colorized = diffOutput
+                .split("\n")
+                .map((line) => {
+                    if (line.startsWith("+") && !line.startsWith("+++")) {
+                        return `${colors.black}${colors.bgGreen}${line}${colors.reset}`;
+                    }
+                    if (line.startsWith("-") && !line.startsWith("---")) {
+                        return `${colors.white}${colors.bgRed}${line}${colors.reset}`;
+                    }
+                    if (line.startsWith("@@")) {
+                        return `${colors.cyan}${line}${colors.reset}`;
+                    }
+                    if (line.startsWith("diff --git") || line.startsWith("index") || line.startsWith("---") || line.startsWith("+++")) {
+                        return `${colors.bold}${line}${colors.reset}`;
+                    }
+                    return line;
+                })
+                .join("\n");
+
+            console.log(colorized);
+            return { success: true, data: { diff: diffOutput } };
+        } catch (e: any) {
+            return { success: false, error: e.message };
+        }
+    }
+
     // git commit to specific issue number with message
     // issue number will be fetched from current branch name
     static async commit(args: {message: string}): Promise<ToolResult> {
