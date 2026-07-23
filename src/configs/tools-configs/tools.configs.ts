@@ -8,7 +8,7 @@ import { CustomCommandService } from "../../services/business.services/custom-co
 
 const config = ConfigService.readConfig();
 const defaultProject = config?.Jira?.defaultProject;
-
+const defaultDevStream = config?.Git?.defaultDevStream;
 export const gitTools: ToolDefinition[] = [
     {
         id:"git_status",
@@ -93,7 +93,8 @@ export const gitTools: ToolDefinition[] = [
                 name: "branch",
                 label: "Branch Name",
                 type: "string",
-                required: true
+                required: true,
+                default: defaultDevStream
             }
         ],
         handler: GitService.pullFrom,
