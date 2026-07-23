@@ -152,7 +152,7 @@ Each Git operation in the menu maps to a real `git` command under the hood:
 | Menu Option      | Equivalent Git Command                     | Description                              |
 |------------------|--------------------------------------------|------------------------------------------|
 | **Status**       | `git status`                               | Show the working tree status             |
-| **Checkout**     | `git checkout <branch>`                    | Switch to an existing branch             |
+| **Checkout**     | `git checkout <branch>`                    | Switch to a branch                       |
 | **Stash**        | `git stash`                                | Stash the changes in a dirty working directory |
 | **Stash Pop**    | `git stash pop`                            | Restore stashed changes back to working tree |
 | **Push**         | `git push`                                 | Push commits to the current remote branch |

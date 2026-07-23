@@ -1,17 +1,25 @@
-import { simpleGit } from "simple-git";
+import { simpleGit, StatusResult } from "simple-git";
 import { logger } from "../../utils/logger.js";
 import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
+import { ConfigService } from "../cli.services/config.service.js";
+import { PromptService } from "../cli.services/prompt.service.js";
+import { validateGitAddInput, getFilePathsFromIndices } from "../../utils/utilsForServices.ts/gitServiceUtils.js";
+import { colors } from "../../configs/global-configs.js";
 
 const git = simpleGit();
+const configs = ConfigService.readConfig();
 
 export class GitService {
     
     // gets the status of repo
     static async status(_args?: Record<string, any>): Promise<ToolResult> {
         try {
-            const status = await git.raw(["status"]);
-            logger.plain(status);
-            return { success: true, data: { status } };
+            // const status = await git.raw(["status"]);
+            const response:StatusResult = await git.status();
+            const indexedFileArr = response?.files?.map( (fileStatusSummary, index) => ({ index: index+1, path: fileStatusSummary?.path }) );
+
+            logger.plain(indexedFileArr);
+            return { success: true, data: { indexedFileArr } };
         } catch (e: any) {
             return { success: false, error: e.message };
         }
@@ -91,11 +99,73 @@ export class GitService {
         }
     }
 
-    static async addAll(): Promise<ToolResult> {
+    static async add(): Promise<ToolResult> {
         try {
-            const response = await git.add('.');
-            logger.plain(response);
+            const statusResponse = await GitService.status();
+            if (!statusResponse?.success || !statusResponse.data?.indexedFileArr) {
+                return { success: false, error: "Failed to fetch status" };
+            }
+
+            const indexedFileArr: Array<{ index: number; path: string }> = statusResponse.data.indexedFileArr;
+            const answer = await PromptService.collectAnswer("Enter comma separated index values to add, or enter '.' to add all: ");
+
+            if (!answer || !validateGitAddInput(answer)) {
+                return { success: false, error: "Invalid input. Expected '.' or comma-separated numbers (e.g., '1,2,3')." };
+            }
+
+            if (answer.trim() === ".") {
+                await git.add("*");
+                logger.success("Added all files to staging.");
+            } else {
+                const filePaths = getFilePathsFromIndices(answer, indexedFileArr);
+                if (filePaths.length === 0) {
+                    return { success: false, error: "No matching file paths found for the provided indices." };
+                }
+                await git.add(filePaths);
+                logger.success(`Added ${filePaths.length} file(s) to staging.`);
+            }
+
             return { success: true };
+        } catch (e: any) {
+            return { success: false, error: e.message };
+        }
+    }
+
+    // show git diff with color-coded output (red for removals, green for additions)
+    static async diff(args: { target?: string}): Promise<ToolResult> {
+        try {
+            const diffArgs: string[] = [];
+            if (args?.target) diffArgs.push(args.target);
+
+            const diffOutput = await git.diff(diffArgs);
+
+            if (!diffOutput) {
+                logger.plain("No changes to display.");
+                return { success: true, data: { diff: "" } };
+            }
+
+            // Colorize each line based on its first character
+            const colorized = diffOutput
+                .split("\n")
+                .map((line) => {
+                    if (line.startsWith("+") && !line.startsWith("+++")) {
+                        return `${colors.black}${colors.bgGreen}${line}${colors.reset}`;
+                    }
+                    if (line.startsWith("-") && !line.startsWith("---")) {
+                        return `${colors.white}${colors.bgRed}${line}${colors.reset}`;
+                    }
+                    if (line.startsWith("@@")) {
+                        return `${colors.cyan}${line}${colors.reset}`;
+                    }
+                    if (line.startsWith("diff --git") || line.startsWith("index") || line.startsWith("---") || line.startsWith("+++")) {
+                        return `${colors.bold}${line}${colors.reset}`;
+                    }
+                    return line;
+                })
+                .join("\n");
+
+            console.log(colorized);
+            return { success: true, data: { diff: diffOutput } };
         } catch (e: any) {
             return { success: false, error: e.message };
         }

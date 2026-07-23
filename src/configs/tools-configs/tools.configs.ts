@@ -8,7 +8,7 @@ import { CustomCommandService } from "../../services/business.services/custom-co
 
 const config = ConfigService.readConfig();
 const defaultProject = config?.Jira?.defaultProject;
-
+const defaultDevStream = config?.Git?.defaultDevStream;
 export const gitTools: ToolDefinition[] = [
     {
         id:"git_status",
@@ -93,7 +93,8 @@ export const gitTools: ToolDefinition[] = [
                 name: "branch",
                 label: "Branch Name",
                 type: "string",
-                required: true
+                required: true,
+                default: defaultDevStream
             }
         ],
         handler: GitService.pullFrom,
@@ -101,12 +102,12 @@ export const gitTools: ToolDefinition[] = [
         helperStr: "git pull <origin> <branch-name>"
     },
     {
-        id: "git_addAll",
+        id: "git_add",
         category: "Git",
-        name: "addAll",
+        name: "add",
         description: "Stage all changes",
         arguments:[],
-        handler: GitService.addAll,
+        handler: GitService.add,
         listTool: true,
         helperStr: "git add ."
     },
@@ -136,6 +137,23 @@ export const gitTools: ToolDefinition[] = [
         handler: GitService.getBranchName,
         listTool: true,
         helperStr: "git branch --show-current"
+    },
+    {
+        id: "git_diff",
+        category: "Git",
+        name: "Diff",
+        description: "Show diff with color-coded output (red for removals, green for additions)",
+        arguments: [
+            {
+                name: "target",
+                label: "Target (branch or file)",
+                type: "string",
+                required: false
+            }
+        ],
+        handler: GitService.diff,
+        listTool: true,
+        helperStr: "git diff"
     }
 ]
 
@@ -269,7 +287,7 @@ export const userInteractionTools: ToolDefinition[] = [
         id: "user_stageFiles",
         category: "User",
         name: "Stage Files",
-        description: "Prompt the user for how to stage files. Gives two options: 'Stage all files' (git add .) or 'I'll stage manually and confirm when ready'. Use this whenever files need to be staged before a commit — do NOT try to combine user_confirm + user_addAll for staging.",
+        description: "Prompt the user for how to stage files. Gives two options: 'Stage all files' (git add .) or 'I'll stage manually and confirm when ready'. Use this whenever files need to be staged before a commit — do NOT try to combine user_confirm + user_add for staging.",
         arguments: [],
         handler: UserInteractionService.stageFiles.bind(UserInteractionService),
         listTool: false,
@@ -278,7 +296,7 @@ export const userInteractionTools: ToolDefinition[] = [
 
 
 export const orderForTools = {
-    "Git":['git_stash', 'git_addAll', 'git_commit', 'git_push', 'git_stashPop', 'git_checkout', 'git_status', 'git_pull', ],
+    "Git":['git_stash', 'git_add', 'git_commit', 'git_push', 'git_stashPop', 'git_checkout', 'git_status', 'git_pull', ],
     "Jira":['jira_createSubtask', 'jira_listIssues', 'jira_listSubtasks'],
     "Bitbucket":[]
 }

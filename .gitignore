@@ -145,3 +145,5 @@ vite.config.ts.timestamp-*
 # own
 package-lock.json
 .vscode/
+
+plan.txt

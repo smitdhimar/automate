@@ -1,4 +1,8 @@
 export const DEFAULT_CONFIG = {
+  "Git":{
+    "commitPrefix": false,
+    "defaultDevStream": "your default branch to take pull from / create branch from"
+  },
   "Jira": {
     "hosting": "cloud",
     "defaultProject":"your-default-project",
