@@ -14,9 +14,27 @@ export class GitService {
     // gets the status of repo
     static async status(_args?: Record<string, any>): Promise<ToolResult> {
         try {
-            // const status = await git.raw(["status"]);
+            const trackingFileExts = configs?.Git?.gitTrackingFileExts;
+            let limitedTracking = false;
+
+            if( trackingFileExts && Array.isArray(trackingFileExts) ){
+                limitedTracking = true;
+            }
             const response:StatusResult = await git.status();
-            const indexedFileArr = response?.files?.map( (fileStatusSummary, index) => ({ index: index+1, path: fileStatusSummary?.path }) );
+            const indexedFileArr = response?.files
+            ?.filter( (fileStatusSummary) => 
+            {
+                // if limited Tracking enabled, then only track specified file extensions 
+                if(limitedTracking && !trackingFileExts.includes(fileStatusSummary?.path?.split('.')?.pop())){
+                    return false;
+                }
+                return true;
+            }
+            )
+            ?.map( (fileStatusSummary, index) => { 
+                // return index & path
+                return ({ index: index+1, path: fileStatusSummary?.path })
+            });
 
             logger.plain(indexedFileArr);
             return { success: true, data: { indexedFileArr } };
@@ -75,7 +93,6 @@ export class GitService {
             return { success: false, error: e.message };
         }
     }
-
 
     // git push
     static async push(): Promise<ToolResult> {
@@ -176,11 +193,21 @@ export class GitService {
     static async commit(args: {message: string}): Promise<ToolResult> {
         try {
             const branchResult = await GitService.getBranchName();
-            if (!branchResult.success || !branchResult.data?.branch) {
+            if (!branchResult.success || !branchResult?.data?.branch) {
                 return { success: false, error: "Could not determine current branch name" };
             }
             const branchName = branchResult.data.branch;
-            const response = await git.commit(`${branchName} ${args.message}`);
+
+            let commitMessage = "";
+
+            if(configs?.Git?.commitPrefixEnabled){
+                commitMessage = `${branchResult.data.branch}${args?.message || ""}`;
+            }
+            else {
+                commitMessage = `${args.message}`;
+            }
+
+            const response = await git.commit(commitMessage);
             logger.plain(response);
             return { success: true, data: { branch: branchName, message: args.message } };
         } catch (e: any) {
@@ -188,4 +215,3 @@ export class GitService {
         }
     }
 }
-

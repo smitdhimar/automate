@@ -1,7 +1,8 @@
 export const DEFAULT_CONFIG = {
   "Git":{
-    "commitPrefix": false,
-    "defaultDevStream": "your default branch to take pull from / create branch from"
+    "commitPrefixEnabled": false,
+    "defaultDevStream": "your default branch to take pull from / create branch from",
+    "gitTrackingFileExts": [ "js", "properties", "java", "ts", "jsx", "tsx", "html", "jsp", "py"]
   },
   "Jira": {
     "hosting": "cloud",

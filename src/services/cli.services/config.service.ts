@@ -75,7 +75,7 @@ export class ConfigService {
     }
 
     if(serviceName === "Git" ){
-      // Git has no hosting sub-config also given properties are not required to be configured. 
+      // Git has no hosting sub-config. 
       return true
     }
 
