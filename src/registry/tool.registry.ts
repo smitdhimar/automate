@@ -26,7 +26,7 @@ export class ToolRegistry {
     for (const tool of this.tools.values()) {
         if (tool.listTool) categories.add(tool.category);
     }
-    return Array.from(categories).sort();
+    return Array.from(categories);
   }
 
   static getTools(
@@ -73,7 +73,7 @@ export const registerTools = () => {
   const bitbucketToolsSorted = sortToolsByOrder(bitbucketTools, order?.Bitbucket);
 
   // Register menu-visible tools
-  [...gitToolsSorted, ...jiraToolsSorted, ...bitbucketToolsSorted]?.map((tool: ToolDefinition) => {
+  [...gitToolsSorted, ...bitbucketToolsSorted, ...jiraToolsSorted]?.map((tool: ToolDefinition) => {
     ToolRegistry.register(tool);
   });
 
