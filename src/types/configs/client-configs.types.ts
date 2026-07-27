@@ -8,12 +8,14 @@ export interface JiraCloudConfig {
 
 export interface JiraSelfHostedConfig {
   baseUrl: string;
-  username: string;
-  password: string;
+  apiToken?: string;
+  username?: string;
+  password?: string;
 }
 
 export interface JiraConfig {
-  hosting: "cloud" | "self-hosted";
+  hosting: "cloud" | "selfHosted";
+  defaultProject: string;
   cloud: JiraCloudConfig;
   selfHosted: JiraSelfHostedConfig;
 }
@@ -28,12 +30,16 @@ export interface BitbucketCloudConfig {
 
 export interface BitbucketSelfHostedConfig {
   baseUrl: string;
-  username: string;
-  password: string;
+  apiToken?: string;
+  username?: string;
+  password?: string;
+  defaultProjectKey?: string;
+  defaultRepoSlug?: string;
+  reviewers?: string[];
 }
 
 export interface BitbucketConfig {
-  hosting: "cloud" | "self-hosted";
+  hosting: "cloud" | "selfHosted";
   cloud: BitbucketCloudConfig;
   selfHosted: BitbucketSelfHostedConfig;
 }

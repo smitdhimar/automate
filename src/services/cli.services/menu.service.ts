@@ -15,7 +15,11 @@ export class MenuService {
 
         while (true) {
             // 1. Get all categories from the registry + AI Assistant
-            const categories = [...ToolRegistry.getCategories(), AI_CATEGORY, CUSTOM_COMMAND_CATEGORY];
+            const categories = [
+                ...ToolRegistry.getCategories(),
+                // AI_CATEGORY, 
+                CUSTOM_COMMAND_CATEGORY
+            ];
 
             // 2. Let user pick a category
             const selectedCategory = await PromptService.selectCategory(categories);

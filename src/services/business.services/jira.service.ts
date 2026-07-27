@@ -25,6 +25,13 @@ export class JiraService {
     return this._client;
   }
 
+  /**
+   * Helper: get the hosting type from config.
+   */
+  private static get hosting(): string {
+    return (this.config?.Jira as JiraConfig | undefined)?.hosting ?? "selfHosted";
+  }
+
   static async listIssues(args: { project: string }): Promise<ToolResult> {
     try {
       logger.info(`Listing Jira issues for project: ${args.project}`);
@@ -94,38 +101,109 @@ export class JiraService {
     project: string;
     parentIssueId: string;
     title: string;
-    affectedArea: string;
-    team: string;
+    affectedArea?: string;
+    team?: string;
     fixVersion?: string;
     description?: string;
+    assigneeName?: string;
   }): Promise<ToolResult> {
     try {
       logger.info(`Creating subtask under ${args.parentIssueId} in project ${args.project}`);
 
-      const body: Record<string, unknown> = {
-        fields: {
-          project: { key: args.project },
-          summary: args.title,
-          issuetype: { name: "Subtask" },
-          parent: { key: args.parentIssueId },
-          ...( this?.config?.jira?.hosting === 'cloud' ? null : {fixVersions: [{ name: args.fixVersion }]}),
-          labels: [args.affectedArea, args.team],
-          description: {
-            type: "doc",
-            version: 1,
-            content: [
-              {
-                type: "paragraph",
-                content: [{ type: "text", text: args?.description }],
-              },
-            ],
-          },
-        },
+      const fields: Record<string, unknown> = {
+        project: { key: args.project },
+        summary: args.title,
+        issuetype: { name: "Sub-task" },
+        parent: { key: args.parentIssueId },
       };
+
+      // Data Center / selfHosted: fixVersions is a plain array of objects
+      if (this.hosting !== "cloud" && args.fixVersion) {
+        fields.fixVersions = [{ name: args.fixVersion }];
+      }
+
+      // Assignee (Data Center uses account name / username)
+      if (args.assigneeName) {
+        fields.assignee = { name: args.assigneeName };
+      }
+
+      // Description in ADF format (common across all hosting types)
+      if (args.description) {
+        fields.description = {
+          type: "doc",
+          version: 1,
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: args.description }],
+            },
+          ],
+        };
+      } else {
+        fields.description = `${args.title}`;
+      }
+
+      const body: Record<string, unknown> = { fields };
 
       const issue = await this.client.post<{ key: string; id: string }>("/issue", body);
       logger.plain(`✅ Subtask created: ${issue.key} under ${args.parentIssueId}`);
       return { success: true, data: { key: issue.key, parent: args.parentIssueId } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  /**
+   * Transition a subtask from "In Progress" to "Done".
+   *
+   * Uses the Data Center v2 API format:
+   *   POST /rest/api/2/issue/{issueKey}/transitions
+   *
+   * The transition ID ("71" = Done) must be provided. Custom fields
+   * (resolution, fixVersions, etc.) are configurable via args.
+   */
+  static async transitionSubtaskToDone(args: {
+    issueKey: string;
+    transitionId?: string;
+    fixVersion?: string;
+    resolution?: string;
+  }): Promise<ToolResult> {
+    try {
+      const transitionId = args.transitionId || "71";
+      const resolution = args.resolution || "Done";
+
+      logger.info(`Transitioning ${args.issueKey} to Done (transition id: ${transitionId})`);
+
+      const body: Record<string, unknown> = {
+        transition: { id: transitionId },
+        fields: {
+          resolution: { name: resolution },
+        },
+      };
+
+      // Add fixVersion if provided
+      if (args.fixVersion) {
+        (body.fields as Record<string, unknown>).fixVersions = [{ name: args.fixVersion }];
+      }
+
+      await this.client.post(`/issue/${args.issueKey}/transitions`, body);
+      logger.plain(`✅ ${args.issueKey} transitioned to Done`);
+      return { success: true, data: { issueKey: args.issueKey, status: "Done" } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  /**
+   * Get available transitions for an issue (useful for finding the right transition ID).
+   */
+  static async getTransitions(args: { issueKey: string }): Promise<ToolResult> {
+    try {
+      const data = await this.client.get<{ transitions: Array<{ id: string; name: string; to: { name: string } }> }>(
+        `/issue/${args.issueKey}/transitions`,
+      );
+      logger.plain(`✅ Found ${data.transitions.length} transition(s) for ${args.issueKey}`);
+      return { success: true, data: { transitions: data.transitions } };
     } catch (e: any) {
       return { success: false, error: e.message };
     }

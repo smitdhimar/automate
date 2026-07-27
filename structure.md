@@ -15,8 +15,8 @@ automate/
 │   ├── clients/
 │   │   ├── base.client.ts                # IProductClient interface
 │   │   ├── http.client.ts                # Shared fetch wrapper (HttpClient)
-│   │   ├── jira.client.ts                # Jira — cloud & self-hosted
-│   │   └── bitbucket.client.ts           # Bitbucket — cloud & self-hosted
+│   │   ├── jira.client.ts                # Jira — cloud & selfHosted
+│   │   └── bitbucket.client.ts           # Bitbucket — cloud & selfHosted
 │   │
 │   ├── configs/
 │   │   ├── global-configs.ts             # Theme, ANSI colors, nav helpers

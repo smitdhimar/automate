@@ -1,5 +1,7 @@
 import { themeType } from "../types/configs/global-configs.types.js";
 
+const enableCloudSupport:boolean = false;
+
 // ── ANSI escape codes ──────────────────────────────────────────
 const reset = "\x1b[0m";
 const dim = "\x1b[2m";
@@ -74,4 +76,4 @@ const colors = {
   bgRed, bgGreen, black
 };
 
-export { Theme, reset, navigation, colors };
+export { Theme, reset, navigation, colors , enableCloudSupport};
