@@ -3,17 +3,19 @@ import { ConfigService } from "../cli.services/config.service.js";
 import { BitbucketClient } from "../../clients/bitbucket.client.js";
 import type { BitbucketConfig } from "../../types/configs/client-configs.types.js";
 import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
+import { GitService } from "./git.service.js";
 
 export class BitbucketService {
 
   private static _client: BitbucketClient | null = null;
-
   /**
    * Read full config (fresh each time so defaults are always current).
    */
   private static get rawConfig(): Record<string, any> | null {
     return ConfigService.readConfig();
   }
+
+  private static projectKey = this?.rawConfig?.Bitbucket?.selfHosted?.defaultProjectKey;
 
   /**
    * Lazily initialised client. Reads config from disk on first call.
@@ -72,12 +74,11 @@ export class BitbucketService {
    */
   static async createBranch(args: {
     issueNumber: string;
-    projectKey?: string;
     repoSlug?: string;
     startPoint?: string;
   }): Promise<ToolResult> {
     try {
-      const projectKey = this.resolveProjectKey(args.projectKey);
+      const projectKey = this.projectKey;
       const repoSlug = this.resolveRepoSlug(args.repoSlug);
       const branchName = `feature/${args.issueNumber}`;
       const startPoint = args.startPoint || "master";
@@ -94,7 +95,7 @@ export class BitbucketService {
         displayId: string;
         type: string;
         latestCommit: string;
-      }>(`/projects/${encodeURIComponent(projectKey)}/repos/${encodeURIComponent(repoSlug)}/branches`, body);
+      }>(`/projects/${projectKey}/repos/${encodeURIComponent(repoSlug)}/branches`, body);
 
       logger.plain(`✅ Branch ${result.displayId} created (commit: ${result.latestCommit})`);
       return { success: true, data: { branchName, latestCommit: result.latestCommit, projectKey, repoSlug } };
@@ -110,27 +111,25 @@ export class BitbucketService {
    */
   static async createPullRequest(args: {
     title: string;
-    description?: string;
-    fromBranch: string;
     toBranch: string;
-    projectKey?: string;
-    repoSlug?: string;
+    repoSlug: string;
   }): Promise<ToolResult> {
     try {
-      const projectKey = this.resolveProjectKey(args.projectKey);
+      const projectKey = this.projectKey;
       const repoSlug = this.resolveRepoSlug(args.repoSlug);
+      const branchRes = await GitService.getBranchName();
+      const fromBranch = branchRes.data.branch;
 
-      logger.info(`Creating PR: ${args.title} (${args.fromBranch} → ${args.toBranch})`);
+      logger.info(`Creating PR: ${args.title} (${fromBranch} → ${args.toBranch})`);
 
       const body: Record<string, unknown> = {
         title: args.title,
-        description: args.description || args.title,
         state: "OPEN",
         open: true,
         closed: false,
         locked: false,
         fromRef: {
-          id: `refs/heads/${args.fromBranch}`,
+          id: `refs/heads/${fromBranch}`,
           repository: {
             slug: repoSlug,
             project: { key: projectKey },
@@ -165,16 +164,14 @@ export class BitbucketService {
    */
   static async autoMergePullRequest(args: {
     prId: number;
-    version: number;
-    projectKey?: string;
-    repoSlug?: string;
-    message?: string;
+    repoSlug: string;
+    message: string;
   }): Promise<ToolResult> {
     try {
-      const projectKey = this.resolveProjectKey(args.projectKey);
+      const projectKey = this.projectKey;
       const repoSlug = this.resolveRepoSlug(args.repoSlug);
 
-      logger.info(`Auto-merging PR #${args.prId} (version: ${args.version})`);
+      logger.info(`Auto-merging PR #${args.prId}`);
 
       const body = {
         autoSubject: false,
@@ -184,7 +181,7 @@ export class BitbucketService {
       };
 
       const result = await this.client.post<{ id: number; state: string; version: number }>(
-        `/projects/${encodeURIComponent(projectKey)}/repos/${encodeURIComponent(repoSlug)}/pull-requests/${args.prId}/merge?version=${args.version}`,
+        `/projects/${encodeURIComponent(projectKey)}/repos/${encodeURIComponent(repoSlug)}/pull-requests/${args.prId}/merge?version=${0}`,
         body,
       );
 

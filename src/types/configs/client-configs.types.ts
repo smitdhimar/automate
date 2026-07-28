@@ -16,6 +16,11 @@ export interface JiraSelfHostedConfig {
 export interface JiraConfig {
   hosting: "cloud" | "selfHosted";
   defaultProject: string;
+  defaultFixVersion?: string;
+  defaultSource?: string;
+  assignee?: string;
+  affectedFunctionalArea?: string;
+  team?: string;
   cloud: JiraCloudConfig;
   selfHosted: JiraSelfHostedConfig;
 }

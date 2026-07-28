@@ -20,6 +20,11 @@ export const DEFAULT_CONFIG = {
   Jira: {
     hosting: "selfHosted",
     defaultProject: "your-default-project",
+    defaultFixVersion: "yy.mm.dd",
+    defaultSource: "your-default-source",
+    assignee: "your-default-assignee",
+    affectedFunctionalArea: "your-affected-functional-area",
+    team: "your-team",
     ...(enableCloudSupport && {
       cloud: {
         site: "your-domain",
