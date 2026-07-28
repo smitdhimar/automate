@@ -52,11 +52,7 @@ export const DEFAULT_CONFIG = {
       defaultProjectKey: "your-project-key",
       defaultRepoSlug: "your-repo-slug",
       reviewers: [
-        {
-          user: {
-            name: "reviewer1Username",
-          },
-        },
+        "reviewer1Username",
       ],
     },
   },

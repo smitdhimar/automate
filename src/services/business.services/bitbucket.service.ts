@@ -74,14 +74,41 @@ export class BitbucketService {
    */
   static async createBranch(args: {
     issueNumber: string;
-    repoSlug?: string;
-    startPoint?: string;
+    repoSlug: string;
+    startPoint: string;
+    issueSummary?: string
   }): Promise<ToolResult> {
     try {
       const projectKey = this.projectKey;
       const repoSlug = this.resolveRepoSlug(args.repoSlug);
-      const branchName = `feature/${args.issueNumber}`;
-      const startPoint = args.startPoint || "master";
+      const startPoint = args.startPoint;
+
+      // ── Resolve issue summary ────────────────────────────────
+      let summary = args.issueSummary;
+      if (!summary) {
+        const res = await this.client.get<{ issues: Array<{ key: string; fields: { summary: string } }> }>(
+          `/search?jql=key=${encodeURIComponent(args.issueNumber)}&fields=summary`,
+        );
+        summary = res?.issues?.[0]?.fields?.summary;
+      }
+      if (!summary) {
+        throw new Error(`Could not fetch summary for issue ${args.issueNumber}`);
+      }
+
+      // ── Build branch name ────────────────────────────────────
+      // feature/EL-12345-some-description (max 100 chars)
+      const slug = summary
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      const suffix = slug.length > 0 ? `-${slug}` : "";
+      const maxLen = 100;
+      const prefix = `feature/${args.issueNumber}`;
+      // Truncate slug so the full name fits within maxLen
+      const available = maxLen - prefix.length - 1; // -1 for the hyphen
+      const branchName = available > 0 && slug.length > available
+        ? `${prefix}-${slug.slice(0, available)}`
+        : `${prefix}${suffix}`;
 
       logger.info(`Creating branch ${branchName} from ${startPoint} in ${projectKey}/${repoSlug}`);
 

@@ -333,7 +333,8 @@ export const bitbucketTools: ToolDefinition[] = [
                 name: "repoSlug",
                 label: "Repo Slug",
                 type: "string",
-                required: true
+                required: true,
+                default: defaultRepoSlug
             },
             {
                 name: "message",
