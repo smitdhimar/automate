@@ -9,6 +9,9 @@ import { CustomCommandService } from "../../services/business.services/custom-co
 const config = ConfigService.readConfig();
 const defaultProject = config?.Jira?.defaultProject;
 const defaultDevStream = config?.Git?.defaultDevStream;
+const defaultFixVersion = config?.Jira?.defaultFixVersion;
+const defaultSource = config?.Jira?.defaultSource;
+const defaultRepoSlug = config?.Bitbucket?.selfHosted?.defaultRepoSlug;
 export const gitTools: ToolDefinition[] = [
     {
         id:"git_status",
@@ -121,7 +124,7 @@ export const gitTools: ToolDefinition[] = [
                 name: "message",
                 label: "Message",
                 type: "string",
-                required: false
+                required: true
             }
         ],
         handler: GitService.commit,
@@ -163,15 +166,7 @@ export const jiraTools: ToolDefinition[] = [
         category: "Jira",
         name: "List Issues",
         description: "List Jira issues assigned to you, which are not subtask, and are in 'To Do', 'In Progress', 'Under Review', 'Assigned' statuses.",
-        arguments: [
-            {
-                name: "project",
-                label: "Project Key",
-                type: "string",
-                required: true,
-                default: defaultProject
-            }
-        ],
+        arguments: [],
         handler: JiraService.listIssues.bind(JiraService),
         listTool: true
     },
@@ -180,15 +175,7 @@ export const jiraTools: ToolDefinition[] = [
         category: "Jira",
         name: "List Subtasks",
         description: "List Jira subtasks assigned to you and are in 'To Do', 'In Progress', 'Under Review', 'Assigned' statuses.",
-        arguments: [
-            {
-                name: "project",
-                label: "Project Key",
-                type: "string",
-                required: true,
-                default: defaultProject
-            }
-        ],
+        arguments: [],
         handler: JiraService.listSubtasks.bind(JiraService),
         listTool: true
     },
@@ -198,13 +185,6 @@ export const jiraTools: ToolDefinition[] = [
         name: "Create Subtask",
         description: "Create a subtask under a parent issue with affected area, fix version, and team details.",
         arguments: [
-            {
-                name: "project",
-                label: "Project Key",
-                type: "string",
-                required: true,
-                default: defaultProject
-            },
             {
                 name: "parentIssueId",
                 label: "Parent Issue ID",
@@ -218,33 +198,62 @@ export const jiraTools: ToolDefinition[] = [
                 required: true
             },
             {
-                name: "affectedArea",
-                label: "Affected Area",
+                name: "fixVersion",
+                label: "Fix Version",
                 type: "string",
-                required: true
+                required: true,
+                default: defaultFixVersion
             },
             {
-                name: "team",
-                label: "Team",
+                name: "source",
+                label: "Source",
+                type: "string",
+                required: true,
+                default: defaultSource
+            }
+        ],
+        handler: JiraService.createSubtask.bind(JiraService),
+        listTool: true
+    },
+    {
+        id: "jira_transitionToDone",
+        category: "Jira",
+        name: "Transition Subtask to Done",
+        description: "Transition a subtask from 'In Progress' to 'Done' status. Provide the issue key and optional fix version.",
+        arguments: [
+            {
+                name: "issueKey",
+                label: "Issue Key (e.g. EL-12345)",
                 type: "string",
                 required: true
-            },
-            {
-                name: "description",
-                label: "Description",
-                type: "string",
-                required: false
             },
             {
                 name: "fixVersion",
                 label: "Fix Version",
                 type: "string",
-                required: false
+                required: true,
+                default: defaultFixVersion
             }
         ],
-        handler: JiraService.createSubtask.bind(JiraService),
+        handler: JiraService.transitionSubtaskToDone.bind(JiraService),
         listTool: true
-    }
+    },
+    // {
+    //     id: "jira_getTransitions",
+    //     category: "Jira",
+    //     name: "Get Transitions",
+    //     description: "Get available transitions for an issue (useful for finding the right transition ID).",
+    //     arguments: [
+    //         {
+    //             name: "issueKey",
+    //             label: "Issue Key (e.g. EL-12345)",
+    //             type: "string",
+    //             required: true
+    //         }
+    //     ],
+    //     handler: JiraService.getTransitions.bind(JiraService),
+    //     listTool: true
+    // }
 ]
 
 export const bitbucketTools: ToolDefinition[] = [
@@ -252,17 +261,90 @@ export const bitbucketTools: ToolDefinition[] = [
         id: "bitbucket_createBranch",
         category: "Bitbucket",
         name: "Create Branch",
-        description: "Create branch from/under spefic issue",
+        description: "Create a branch in Bitbucket (selfHosted / Data Center) from a given start point (default: master). Uses project key and repo slug from config.",
         arguments: [
             {
                 name: "issueNumber",
                 label: "Issue Number",
                 type: "string",
                 required: true
+            },
+            {
+                name: "repoSlug",
+                label: "Repo Slug",
+                type: "string",
+                required: true,
+                default: defaultRepoSlug
+            },
+            {
+                name: "startPoint",
+                label: "Start Point branch",
+                type: "string",
+                required: true,
+                default: defaultDevStream
             }
         ],
         handler: BitbucketService.createBranch.bind(BitbucketService),
-        listTool: false
+        listTool: true
+    },
+    {
+        id: "bitbucket_createPR",
+        category: "Bitbucket",
+        name: "Create Pull Request",
+        description: "Create a pull request in Bitbucket (selfHosted / Data Center). Uses project key and repo slug from config.",
+        arguments: [
+            {
+                name: "title",
+                label: "PR Title",
+                type: "string",
+                required: true
+            },
+            {
+                name: "toBranch",
+                label: "Target Branch",
+                type: "string",
+                required: true,
+                default: defaultDevStream
+            },
+            {
+                name: "repoSlug",
+                label: "Repo Slug",
+                type: "string",
+                required: true,
+                default: defaultRepoSlug
+            }
+        ],
+        handler: BitbucketService.createPullRequest.bind(BitbucketService),
+        listTool: true
+    },
+    {
+        id: "bitbucket_autoMerge",
+        category: "Bitbucket",
+        name: "Auto-Merge PR",
+        description: "Attempt to auto-merge a pull request in Bitbucket (selfHosted / Data Center).",
+        arguments: [
+            {
+                name: "prId",
+                label: "Pull Request ID",
+                type: "number",
+                required: true
+            },
+            {
+                name: "repoSlug",
+                label: "Repo Slug",
+                type: "string",
+                required: true
+            },
+            {
+                name: "message",
+                label: "Merge Message",
+                type: "string",
+                required: true,
+                default: "Pull request Merge"
+            }
+        ],
+        handler: BitbucketService.autoMergePullRequest.bind(BitbucketService),
+        listTool: true
     }
 ]
 
@@ -297,6 +379,6 @@ export const userInteractionTools: ToolDefinition[] = [
 
 export const orderForTools = {
     "Git":['git_stash', 'git_add', 'git_commit', 'git_push', 'git_stashPop', 'git_checkout', 'git_status', 'git_pull', ],
-    "Jira":['jira_createSubtask', 'jira_listIssues', 'jira_listSubtasks'],
-    "Bitbucket":[]
+    "Jira":['jira_createSubtask', 'jira_listIssues', 'jira_listSubtasks', 'jira_transitionToDone'],
+    "Bitbucket":['bitbucket_createBranch', 'bitbucket_createPR', 'bitbucket_autoMerge']
 }

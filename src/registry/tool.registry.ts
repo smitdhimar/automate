@@ -5,6 +5,7 @@ import type {
 import {
   gitTools,
   jiraTools,
+  bitbucketTools,
   userInteractionTools,
   orderForTools as order,
 } from "../configs/tools-configs/tools.configs.js";
@@ -25,12 +26,12 @@ export class ToolRegistry {
     for (const tool of this.tools.values()) {
         if (tool.listTool) categories.add(tool.category);
     }
-    return Array.from(categories).sort();
+    return Array.from(categories);
   }
 
   static getTools(
     category: string,
-  ): Pick<ToolDefinition, "id" | "name" | "description">[] {
+  ): Pick<ToolDefinition, "id" | "name" | "description" | "helperStr">[] {
     return Array.from(this.tools.values())
       .filter((t) => t.category === category && t.listTool)
       .map((t) => ({
@@ -69,14 +70,14 @@ export class ToolRegistry {
 export const registerTools = () => {
   const gitToolsSorted = sortToolsByOrder(gitTools, order?.Git);
   const jiraToolsSorted = sortToolsByOrder(jiraTools, order?.Jira);
-  // const bitbucketToolsSorted = sortToolsByOrder()
+  const bitbucketToolsSorted = sortToolsByOrder(bitbucketTools, order?.Bitbucket);
 
   // Register menu-visible tools
-  [...gitToolsSorted, ...jiraToolsSorted]?.map((tool: ToolDefinition) => {
+  [...gitToolsSorted, ...bitbucketToolsSorted, ...jiraToolsSorted]?.map((tool: ToolDefinition) => {
     ToolRegistry.register(tool);
   });
 
-  // Register hidden tools (LLM-only: user interaction tools, bitbucket tools, etc.)
+  // Register hidden tools (LLM-only: user interaction tools)
   [...userInteractionTools]?.map((tool: ToolDefinition) => {
     ToolRegistry.register(tool);
   });

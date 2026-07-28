@@ -75,7 +75,7 @@ export class ConfigService {
     }
 
     if(serviceName === "Git" ){
-      // Git has no hosting sub-config also given properties are not required to be configured. 
+      // Git has no hosting sub-config. 
       return true
     }
 
@@ -87,7 +87,7 @@ export class ConfigService {
 
     // 1. Check that "hosting" is set to a valid value
     const hosting: string | undefined = userSection.hosting;
-    if (hosting !== "cloud" && hosting !== "self-hosted") return false;
+    if (hosting !== "cloud" && hosting !== "selfHosted") return false;
 
     // 2. Check that the relevant sub-config is filled in
     const section = userSection[hosting];

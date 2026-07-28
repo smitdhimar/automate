@@ -3,17 +3,26 @@ import { ConfigService } from "../cli.services/config.service.js";
 import { BitbucketClient } from "../../clients/bitbucket.client.js";
 import type { BitbucketConfig } from "../../types/configs/client-configs.types.js";
 import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
+import { GitService } from "./git.service.js";
 
 export class BitbucketService {
 
   private static _client: BitbucketClient | null = null;
+  /**
+   * Read full config (fresh each time so defaults are always current).
+   */
+  private static get rawConfig(): Record<string, any> | null {
+    return ConfigService.readConfig();
+  }
+
+  private static projectKey = this?.rawConfig?.Bitbucket?.selfHosted?.defaultProjectKey;
 
   /**
    * Lazily initialised client. Reads config from disk on first call.
    */
   private static get client(): BitbucketClient {
     if (!this._client) {
-      const config = ConfigService.readConfig();
+      const config = this.rawConfig;
       const bbConfig = config?.Bitbucket as BitbucketConfig | undefined;
       if (!bbConfig) {
         throw new Error("Bitbucket is not configured. Run `automate` to set up your config.");
@@ -23,51 +32,161 @@ export class BitbucketService {
     return this._client;
   }
 
-  static async createBranch(args: { issueNumber: string }): Promise<ToolResult> {
+  /**
+   * Resolve the project key from args or config default.
+   */
+  private static resolveProjectKey(argsProjectKey?: string): string {
+    if (argsProjectKey) return argsProjectKey;
+    const bbConfig = this.rawConfig?.Bitbucket as BitbucketConfig | undefined;
+    const projectKey = bbConfig?.selfHosted?.defaultProjectKey;
+    if (projectKey) return projectKey;
+    throw new Error("No project key provided and no default configured in Bitbucket.selfHosted.defaultProjectKey");
+  }
+
+  /**
+   * Resolve the repo slug from args or config default.
+   */
+  private static resolveRepoSlug(argsRepoSlug?: string): string {
+    if (argsRepoSlug) return argsRepoSlug;
+    const bbConfig = this.rawConfig?.Bitbucket as BitbucketConfig | undefined;
+    const repoSlug = bbConfig?.selfHosted?.defaultRepoSlug;
+    if (repoSlug) return repoSlug;
+    throw new Error("No repo slug provided and no default configured in Bitbucket.selfHosted.defaultRepoSlug");
+  }
+
+  /**
+   * Resolve reviewers list from config.
+   */
+  private static getReviewers(): Array<{ user: { name: string } }> {
+    const bbConfig = this.rawConfig?.Bitbucket as BitbucketConfig | undefined;
+    const reviewerNames = bbConfig?.selfHosted?.reviewers ?? [];
+    return reviewerNames.map(name => ({ user: { name } }));
+  }
+
+  // ── selfHosted Bitbucket API ─────────────────────────────────
+
+  /**
+   * Create a branch in Bitbucket (selfHosted / Data Center).
+   *
+   * POST {baseUrl}/rest/api/1.0/projects/{projectKey}/repos/{repoSlug}/branches
+   *
+   * Body: { "name": "feature/EL-12345", "startPoint": "release/release_35.0.0" }
+   */
+  static async createBranch(args: {
+    issueNumber: string;
+    repoSlug?: string;
+    startPoint?: string;
+  }): Promise<ToolResult> {
     try {
-      logger.info(`Creating branch for issue ${args.issueNumber}`);
+      const projectKey = this.projectKey;
+      const repoSlug = this.resolveRepoSlug(args.repoSlug);
+      const branchName = `feature/${args.issueNumber}`;
+      const startPoint = args.startPoint || "master";
 
-      const workspace = "your-workspace"; // TODO: pull from config or args
-      const repoSlug = "your-repo";       // TODO: pull from config or args
-
-      const defaultBranch = await this.client.get<{ name: string }>(
-        `/repositories/${workspace}/${repoSlug}/refs/branches/default`,
-      );
+      logger.info(`Creating branch ${branchName} from ${startPoint} in ${projectKey}/${repoSlug}`);
 
       const body = {
-        name: `feature/${args.issueNumber}`,
-        target: { hash: defaultBranch.name },
+        name: branchName,
+        startPoint,
       };
 
-      await this.client.post(`/repositories/${workspace}/${repoSlug}/refs/branches`, body);
-      logger.plain(`✅ Branch feature/${args.issueNumber} created`);
-      return { success: true, data: { branchName: `feature/${args.issueNumber}` } };
+      const result = await this.client.post<{
+        id: string;
+        displayId: string;
+        type: string;
+        latestCommit: string;
+      }>(`/projects/${projectKey}/repos/${encodeURIComponent(repoSlug)}/branches`, body);
+
+      logger.plain(`✅ Branch ${result.displayId} created (commit: ${result.latestCommit})`);
+      return { success: true, data: { branchName, latestCommit: result.latestCommit, projectKey, repoSlug } };
     } catch (e: any) {
       return { success: false, error: e.message };
     }
   }
 
-  static async listRepositories(args: { workspace: string }): Promise<ToolResult> {
+  /**
+   * Create a pull request in Bitbucket (selfHosted / Data Center).
+   *
+   * POST {baseUrl}/rest/api/1.0/projects/{projectKey}/repos/{repoSlug}/pull-requests
+   */
+  static async createPullRequest(args: {
+    title: string;
+    toBranch: string;
+    repoSlug: string;
+  }): Promise<ToolResult> {
     try {
-      logger.info(`Listing repositories in workspace: ${args.workspace}`);
-      const data = await this.client.get<{ values: unknown[] }>(
-        `/repositories/${args.workspace}`,
+      const projectKey = this.projectKey;
+      const repoSlug = this.resolveRepoSlug(args.repoSlug);
+      const branchRes = await GitService.getBranchName();
+      const fromBranch = branchRes.data.branch;
+
+      logger.info(`Creating PR: ${args.title} (${fromBranch} → ${args.toBranch})`);
+
+      const body: Record<string, unknown> = {
+        title: args.title,
+        state: "OPEN",
+        open: true,
+        closed: false,
+        locked: false,
+        fromRef: {
+          id: `refs/heads/${fromBranch}`,
+          repository: {
+            slug: repoSlug,
+            project: { key: projectKey },
+          },
+        },
+        toRef: {
+          id: `refs/heads/${args.toBranch}`,
+          repository: {
+            slug: repoSlug,
+            project: { key: projectKey },
+          },
+        },
+        reviewers: this.getReviewers(),
+      };
+
+      const result = await this.client.post<{ id: number; title: string; state: string; version: number }>(
+        `/projects/${encodeURIComponent(projectKey)}/repos/${encodeURIComponent(repoSlug)}/pull-requests`,
+        body,
       );
-      logger.plain(`✅ Found ${data.values.length} repo(s)`);
-      return { success: true, data: { repositories: data.values } };
+
+      logger.plain(`✅ PR #${result.id} created: ${result.title}`);
+      return { success: true, data: { prId: result.id, version: result.version, title: result.title, state: result.state } };
     } catch (e: any) {
       return { success: false, error: e.message };
     }
   }
 
-  static async getPullRequests(args: { workspace: string; repo: string }): Promise<ToolResult> {
+  /**
+   * Auto-merge / try-merge a pull request in Bitbucket (selfHosted / Data Center).
+   *
+   * POST {baseUrl}/rest/api/1.0/projects/{projectKey}/repos/{repoSlug}/pull-requests/{prId}/merge?version={version}
+   */
+  static async autoMergePullRequest(args: {
+    prId: number;
+    repoSlug: string;
+    message: string;
+  }): Promise<ToolResult> {
     try {
-      logger.info(`Listing PRs for ${args.workspace}/${args.repo}`);
-      const data = await this.client.get<{ values: unknown[] }>(
-        `/repositories/${args.workspace}/${args.repo}/pullrequests`,
+      const projectKey = this.projectKey;
+      const repoSlug = this.resolveRepoSlug(args.repoSlug);
+
+      logger.info(`Auto-merging PR #${args.prId}`);
+
+      const body = {
+        autoSubject: false,
+        message: args.message || `Pull request #${args.prId}`,
+        autoMerge: true,
+        bypassMergeQueue: false,
+      };
+
+      const result = await this.client.post<{ id: number; state: string; version: number }>(
+        `/projects/${encodeURIComponent(projectKey)}/repos/${encodeURIComponent(repoSlug)}/pull-requests/${args.prId}/merge?version=${0}`,
+        body,
       );
-      logger.plain(`✅ Found ${data.values.length} PR(s)`);
-      return { success: true, data: { pullRequests: data.values } };
+
+      logger.plain(`✅ PR #${result.id} merge attempted — state: ${result.state}`);
+      return { success: true, data: { prId: result.id, state: result.state } };
     } catch (e: any) {
       return { success: false, error: e.message };
     }

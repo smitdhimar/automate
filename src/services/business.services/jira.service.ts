@@ -11,6 +11,7 @@ export class JiraService {
 
   private static _client: JiraClient | null = null;
   private static config = ConfigService.readConfig();
+  private static projectKey = this.config?.Jira?.defaultProject ;
   /**
    * Lazily initialised client. Reads config from disk on first call.
    */
@@ -25,11 +26,18 @@ export class JiraService {
     return this._client;
   }
 
-  static async listIssues(args: { project: string }): Promise<ToolResult> {
+  /**
+   * Helper: get the hosting type from config.
+   */
+  private static get hosting(): string {
+    return (this.config?.Jira as JiraConfig | undefined)?.hosting ?? "selfHosted";
+  }
+
+  static async listIssues(): Promise<ToolResult> {
     try {
-      logger.info(`Listing Jira issues for project: ${args.project}`);
+      logger.info(`Listing Jira issues for project: ${this.projectKey}`);
       const data = await this.client.get<{ issues: unknown[] }>(
-        `/search?jql=project=${encodeURIComponent(args.project)} and assignee=CurrentUser() and issuetype not in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
+        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype not in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
       );
 
       logger.success(`Found ${data?.issues?.length} issue(s)`);
@@ -41,11 +49,11 @@ export class JiraService {
     }
   }
 
-  static async listSubtasks(args: { project: string }): Promise<ToolResult> {
+  static async listSubtasks(): Promise<ToolResult> {
     try {
-      logger.info(`Listing Jira subtasks for project: ${args.project}`);
+      logger.info(`Listing Jira subtasks for project: ${this.projectKey}`);
       const data = await this.client.get<{ issues: unknown[] }>(
-        `/search?jql=project=${encodeURIComponent(args.project)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
+        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
       );
 
       logger.success(`Found ${data?.issues?.length} subtask(s)`);
@@ -57,13 +65,13 @@ export class JiraService {
     }
   }
 
-  static async createIssue(args: { project: string; summary: string; description?: string }): Promise<ToolResult> {
+  static async createIssue(args: { summary: string; description?: string }): Promise<ToolResult> {
     try {
-      logger.info(`Creating Jira issue in ${args.project}: ${args.summary}`);
+      logger.info(`Creating Jira issue in ${this.projectKey}: ${args.summary}`);
 
       const body: Record<string, unknown> = {
         fields: {
-          project: { key: args.project },
+          project: { key: this.projectKey },
           summary: args.summary,
           issuetype: { name: "Task" },
         },
@@ -91,41 +99,100 @@ export class JiraService {
   }
 
   static async createSubtask(args: {
-    project: string;
     parentIssueId: string;
     title: string;
-    affectedArea: string;
-    team: string;
+    source: string;
     fixVersion?: string;
-    description?: string;
   }): Promise<ToolResult> {
     try {
-      logger.info(`Creating subtask under ${args.parentIssueId} in project ${args.project}`);
+      logger.info(`Creating subtask under ${args.parentIssueId} in project ${this.projectKey}`);
 
-      const body: Record<string, unknown> = {
-        fields: {
-          project: { key: args.project },
-          summary: args.title,
-          issuetype: { name: "Subtask" },
-          parent: { key: args.parentIssueId },
-          ...( this?.config?.jira?.hosting === 'cloud' ? null : {fixVersions: [{ name: args.fixVersion }]}),
-          labels: [args.affectedArea, args.team],
-          description: {
-            type: "doc",
-            version: 1,
-            content: [
-              {
-                type: "paragraph",
-                content: [{ type: "text", text: args?.description }],
-              },
-            ],
-          },
-        },
+      const jiraCfg = this.config?.Jira as JiraConfig | undefined;
+      const sourceVal = args.source || jiraCfg?.defaultSource;
+      const fixVer = args.fixVersion || jiraCfg?.defaultFixVersion;
+
+
+      // mappings :
+      // customfield_10200 -> activity type
+      // customfield_10313 -> resolution comments
+      // customfield_10221 -> affected functional area
+      // customfield_12317 -> team
+      // customfield_10239 -> source
+      const fields: Record<string, unknown> = {
+        project: { key: this.projectKey },
+        summary: args.title,
+        issuetype: { name: "Sub-task" },
+        parent: { key: args.parentIssueId },
+        "customfield_10200": { value: "Code Change Activity"},
+        "customfield_10313": "",
+        // ── Config-driven standard fields ────────────────────
+        ...(fixVer ? { fixVersions: [{ name: fixVer }] } : {}),
+        ...(jiraCfg?.assignee ? { assignee: { name: jiraCfg.assignee } } : {}),
+        // ── Custom fields from API doc ───────────────────────
+        ...(jiraCfg?.affectedFunctionalArea ? { "customfield_10221": { value: jiraCfg.affectedFunctionalArea } } : {}),
+        ...(jiraCfg?.team ? { "customfield_12317": { value: jiraCfg.team } } : {}),
+        ...(sourceVal ? { "customfield_10239": { value: sourceVal } } : {}),
       };
+
+      const body: Record<string, unknown> = { fields };
 
       const issue = await this.client.post<{ key: string; id: string }>("/issue", body);
       logger.plain(`✅ Subtask created: ${issue.key} under ${args.parentIssueId}`);
       return { success: true, data: { key: issue.key, parent: args.parentIssueId } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  /**
+   * Transition a subtask from "In Progress" to "Done".
+   *
+   * POST /rest/api/2/issue/{issueKey}/transitions
+   */
+  static async transitionSubtaskToDone(args: {
+    issueKey: string;
+    fixVersion: string;
+  }): Promise<ToolResult> {
+    try {
+      const transitionId = "71";
+
+      logger.info(`Transitioning ${args.issueKey} to Done (transition id: ${transitionId})`);
+
+      const jiraCfg = this.config?.Jira as JiraConfig | undefined;
+      const sourceVal = jiraCfg?.defaultSource;
+
+      const fields: Record<string, unknown> = {
+        resolution: { name: "Done" },
+        // ── Config-driven fields ─────────────────────────────
+        ...(args.fixVersion ? { fixVersions: [{ name: args.fixVersion }] } : {}),
+        // ── Custom fields from API doc ───────────────────────
+        ...(sourceVal ? { "customfield_10313": sourceVal } : {}),
+        ...(sourceVal ? { "customfield_10239": { value: sourceVal } } : {}),
+      };
+
+      const body: Record<string, unknown> = {
+        transition: { id: transitionId },
+        fields,
+      };
+
+      await this.client.post(`/issue/${args.issueKey}/transitions`, body);
+      logger.plain(`✅ ${args.issueKey} transitioned to Done`);
+      return { success: true, data: { issueKey: args.issueKey, status: "Done" } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  /**
+   * Get available transitions for an issue (useful for finding the right transition ID).
+   */
+  static async getTransitions(args: { issueKey: string }): Promise<ToolResult> {
+    try {
+      const data = await this.client.get<{ transitions: Array<{ id: string; name: string; to: { name: string } }> }>(
+        `/issue/${args.issueKey}/transitions`,
+      );
+      logger.plain(`✅ Found ${data.transitions.length} transition(s) for ${args.issueKey}`);
+      return { success: true, data: { transitions: data.transitions } };
     } catch (e: any) {
       return { success: false, error: e.message };
     }
