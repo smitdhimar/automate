@@ -183,20 +183,20 @@ export class JiraService {
     }
   }
 
-  /**
-   * Get available transitions for an issue (useful for finding the right transition ID).
-   */
-  static async getTransitions(args: { issueKey: string }): Promise<ToolResult> {
-    try {
-      const data = await this.client.get<{ transitions: Array<{ id: string; name: string; to: { name: string } }> }>(
-        `/issue/${args.issueKey}/transitions`,
-      );
-      logger.plain(`✅ Found ${data.transitions.length} transition(s) for ${args.issueKey}`);
-      return { success: true, data: { transitions: data.transitions } };
-    } catch (e: any) {
-      return { success: false, error: e.message };
-    }
-  }
+  // /**
+  //  * Get available transitions for an issue (useful for finding the right transition ID).
+  //  */
+  // static async getTransitions(args: { issueKey: string }): Promise<ToolResult> {
+  //   try {
+  //     const data = await this.client.get<{ transitions: Array<{ id: string; name: string; to: { name: string } }> }>(
+  //       `/issue/${args.issueKey}/transitions`,
+  //     );
+  //     logger.plain(`✅ Found ${data.transitions.length} transition(s) for ${args.issueKey}`);
+  //     return { success: true, data: { transitions: data.transitions } };
+  //   } catch (e: any) {
+  //     return { success: false, error: e.message };
+  //   }
+  // }
 
   // get status of subtask from branch number
   static async getStatus(): Promise<ToolResult> {

@@ -237,23 +237,7 @@ export const jiraTools: ToolDefinition[] = [
         ],
         handler: JiraService.transitionSubtaskToDone.bind(JiraService),
         listTool: true
-    },
-    // {
-    //     id: "jira_getTransitions",
-    //     category: "Jira",
-    //     name: "Get Transitions",
-    //     description: "Get available transitions for an issue (useful for finding the right transition ID).",
-    //     arguments: [
-    //         {
-    //             name: "issueKey",
-    //             label: "Issue Key (e.g. EL-12345)",
-    //             type: "string",
-    //             required: true
-    //         }
-    //     ],
-    //     handler: JiraService.getTransitions.bind(JiraService),
-    //     listTool: true
-    // }
+    }
 ]
 
 export const bitbucketTools: ToolDefinition[] = [
