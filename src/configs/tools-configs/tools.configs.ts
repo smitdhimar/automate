@@ -4,14 +4,14 @@ import { ConfigService } from "../../services/cli.services/config.service.js"
 import { BitbucketService } from "../../services/business.services/bitbucket.service.js"
 import { ToolDefinition } from "../../types/configs/ui-configs.types/tool-configs.types.js"
 import { UserInteractionService } from "../../services/business.services/user-interaction.service.js"
-import { CustomCommandService } from "../../services/business.services/custom-command.service.js"
 
 const config = ConfigService.readConfig();
-const defaultProject = config?.Jira?.defaultProject;
-const defaultDevStream = config?.Git?.defaultDevStream;
-const defaultFixVersion = config?.Jira?.defaultFixVersion;
-const defaultSource = config?.Jira?.defaultSource;
-const defaultRepoSlug = config?.Bitbucket?.selfHosted?.defaultRepoSlug;
+
+const defaultDevStream = config?.Git?.defaultDevStream || undefined;
+const defaultFixVersion = config?.Jira?.defaultFixVersion || undefined;
+const defaultSource = config?.Jira?.defaultSource || undefined;
+const defaultRepoSlug = config?.Bitbucket?.selfHosted?.defaultRepoSlug || undefined;
+
 export const gitTools: ToolDefinition[] = [
     {
         id:"git_status",
