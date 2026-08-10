@@ -1,5 +1,5 @@
-import { colors, reset } from "../configs/global-configs.js";
-import { logger } from "./logger.js";
+import { colors, reset } from "../../configs/global-configs.js";
+import { logger } from "../logger.js";
 
 // ── Small inline style helpers (avoids coupling to logger internals) ─
 const style = {
@@ -61,14 +61,12 @@ export function logIssueFields(
   const fixVersions: string[] = (fields.fixVersions ?? []).map(
     (v: any) => v.name,
   );
-  const rawDescription = extractDescription(fields.description);
-  const hasDescription = rawDescription.length > 0;
 
   // ── Build the output ──────────────────────────────────────
   const lines: string[] = [];
 
   // Header
-  lines.push(`${prefix}${style.highlight(key)}`);
+  lines.push(`${prefix}${style.highlight(key)}: ${fields.summary ?? ""}`);
 
   // Fields
   lines.push(`  ${style.dim("issuetype")}    → ${issueType}`);
@@ -78,13 +76,6 @@ export function logIssueFields(
   lines.push(
     `  ${style.dim("fixVersions")}  → ${fixVersions.length > 0 ? fixVersions.join(", ") : style.dim("None")}`,
   );
-
-  // Description – truncated to fit neatly
-  if (hasDescription) {
-    lines.push(`  ${style.dim("description")} → ${truncate(rawDescription, 120)}`);
-  } else {
-    lines.push(`  ${style.dim("description")} → ${style.dim("None")}`);
-  }
 
   // ── Print ─────────────────────────────────────────────────
   logger.plain(lines.join("\n"));
@@ -109,5 +100,3 @@ export function logIssueList(
     }
   });
 }
-
-

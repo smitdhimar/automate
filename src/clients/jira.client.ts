@@ -33,10 +33,6 @@ export class JiraClient extends IProductClient {
     "/issue":{
       2: "/issue",
       3: "/issue"
-    },
-    "/transitions": {
-      2: "/transitions",
-      3: "/transitions"
     }
   };
 
@@ -77,7 +73,13 @@ export class JiraClient extends IProductClient {
     const pathSliced = path.split("?");
     const versionKey = this.config.hosting === "cloud" ? "3" : "2";
     const override = JiraClient.VERSION_PATHS[pathSliced[0]];
-    const resolved = `${override?.[versionKey]}${pathSliced?.length > 1 ? `?${pathSliced[1]}` :``}`;
+
+    // No version-specific override for this path — use the path itself.
+    if (!override) {
+      return super.buildPath(path);
+    }
+
+    const resolved = `${override[versionKey]}${pathSliced?.length > 1 ? `?${pathSliced[1]}` :``}`;
     return super.buildPath(resolved);
   }
 

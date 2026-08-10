@@ -131,8 +131,15 @@ export class GitService {
             }
 
             if (answer.trim() === ".") {
-                await git.add("*");
-                logger.success("Added all files to staging.");
+                // Add only the files that appear in indexedFileArr
+                // (i.e. those matching the configured tracking extensions),
+                // rather than every file in the repo.
+                const filePaths = indexedFileArr.map((item) => item.path);
+                if (filePaths.length === 0) {
+                    return { success: false, error: "No matching file paths found for the provided indices." };
+                }
+                await git.add(filePaths);
+                logger.success(`Added ${filePaths.length} file(s) to staging.`);
             } else {
                 const filePaths = getFilePathsFromIndices(answer, indexedFileArr);
                 if (filePaths.length === 0) {

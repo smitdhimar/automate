@@ -4,14 +4,14 @@ import { ConfigService } from "../../services/cli.services/config.service.js"
 import { BitbucketService } from "../../services/business.services/bitbucket.service.js"
 import { ToolDefinition } from "../../types/configs/ui-configs.types/tool-configs.types.js"
 import { UserInteractionService } from "../../services/business.services/user-interaction.service.js"
-import { CustomCommandService } from "../../services/business.services/custom-command.service.js"
 
 const config = ConfigService.readConfig();
-const defaultProject = config?.Jira?.defaultProject;
-const defaultDevStream = config?.Git?.defaultDevStream;
-const defaultFixVersion = config?.Jira?.defaultFixVersion;
-const defaultSource = config?.Jira?.defaultSource;
-const defaultRepoSlug = config?.Bitbucket?.selfHosted?.defaultRepoSlug;
+
+const defaultDevStream = config?.Git?.defaultDevStream || undefined;
+const defaultFixVersion = config?.Jira?.defaultFixVersion || undefined;
+const defaultSource = config?.Jira?.defaultSource || undefined;
+const defaultRepoSlug = config?.Bitbucket?.selfHosted?.defaultRepoSlug || undefined;
+
 export const gitTools: ToolDefinition[] = [
     {
         id:"git_status",
@@ -238,22 +238,22 @@ export const jiraTools: ToolDefinition[] = [
         handler: JiraService.transitionSubtaskToDone.bind(JiraService),
         listTool: true
     },
-    // {
-    //     id: "jira_getTransitions",
-    //     category: "Jira",
-    //     name: "Get Transitions",
-    //     description: "Get available transitions for an issue (useful for finding the right transition ID).",
-    //     arguments: [
-    //         {
-    //             name: "issueKey",
-    //             label: "Issue Key (e.g. EL-12345)",
-    //             type: "string",
-    //             required: true
-    //         }
-    //     ],
-    //     handler: JiraService.getTransitions.bind(JiraService),
-    //     listTool: true
-    // }
+    {
+        id: "jira_transitionToInProgress",
+        category: "Jira",
+        name: "Transition to In Progress",
+        description: "Move an issue to 'In Progress'. Uses a direct transition if available, otherwise falls back to 'Open' → 'Assigned' → 'In Progress'.",
+        arguments: [
+            {
+                name: "issueId",
+                label: "Issue ID (e.g. EL-12345)",
+                type: "string",
+                required: true
+            }
+        ],
+        handler: JiraService.transitionToInProgress.bind(JiraService),
+        listTool: false
+    }
 ]
 
 export const bitbucketTools: ToolDefinition[] = [
@@ -333,7 +333,8 @@ export const bitbucketTools: ToolDefinition[] = [
                 name: "repoSlug",
                 label: "Repo Slug",
                 type: "string",
-                required: true
+                required: true,
+                default: defaultRepoSlug
             },
             {
                 name: "message",

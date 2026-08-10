@@ -39,8 +39,13 @@ export interface BitbucketSelfHostedConfig {
   username?: string;
   password?: string;
   defaultProjectKey?: string;
+  /** Optional. If omitted, the default repo slug from config is used. */
   defaultRepoSlug?: string;
-  reviewers?: string[];
+  /**
+   * Bitbucket PR reviewers (list of usernames).
+   * Required for config validation — can be an empty array `[]`.
+   */
+  reviewers: string[];
 }
 
 export interface BitbucketConfig {

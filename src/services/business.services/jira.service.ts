@@ -1,11 +1,13 @@
 import { logger } from "../../utils/logger.js";
-import { logIssueList } from "../../utils/jiraLogUtils.js";
+import { logIssueList } from "../../utils/utilsForServices.ts/jiraLogUtils.js";
 import { getIssueNumberFromBranch } from "../../utils/utilsForServices.ts/gitServiceUtils.js";
 import { GitService } from "./git.service.js";
+import { BitbucketService } from "./bitbucket.service.js";
 import { ConfigService } from "../cli.services/config.service.js";
 import { JiraClient } from "../../clients/jira.client.js";
 import type { JiraConfig } from "../../types/configs/client-configs.types.js";
 import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
+import { applyTransition, fetchTransitions, findTransition } from "../../utils/utilsForServices.ts/jiraServiceUtils.js";
 
 export class JiraService {
 
@@ -37,7 +39,7 @@ export class JiraService {
     try {
       logger.info(`Listing Jira issues for project: ${this.projectKey}`);
       const data = await this.client.get<{ issues: unknown[] }>(
-        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype not in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
+        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype not in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=summary,fixVersions,issuetype,status`,
       );
 
       logger.success(`Found ${data?.issues?.length} issue(s)`);
@@ -53,7 +55,7 @@ export class JiraService {
     try {
       logger.info(`Listing Jira subtasks for project: ${this.projectKey}`);
       const data = await this.client.get<{ issues: unknown[] }>(
-        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=description,fixVersions,issuetype,status`,
+        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=summary,fixVersions,issuetype,status`,
       );
 
       logger.success(`Found ${data?.issues?.length} subtask(s)`);
@@ -124,12 +126,12 @@ export class JiraService {
         issuetype: { name: "Sub-task" },
         parent: { key: args.parentIssueId },
         "customfield_10200": { value: "Code Change Activity"},
-        "customfield_10313": "",
+        "customfield_10313": " ",
         // ── Config-driven standard fields ────────────────────
         ...(fixVer ? { fixVersions: [{ name: fixVer }] } : {}),
         ...(jiraCfg?.assignee ? { assignee: { name: jiraCfg.assignee } } : {}),
         // ── Custom fields from API doc ───────────────────────
-        ...(jiraCfg?.affectedFunctionalArea ? { "customfield_10221": { value: jiraCfg.affectedFunctionalArea } } : {}),
+        ...(jiraCfg?.affectedFunctionalArea ? { "customfield_10221": [{ value: jiraCfg.affectedFunctionalArea }] } : {}),
         ...(jiraCfg?.team ? { "customfield_12317": { value: jiraCfg.team } } : {}),
         ...(sourceVal ? { "customfield_10239": { value: sourceVal } } : {}),
       };
@@ -138,7 +140,33 @@ export class JiraService {
 
       const issue = await this.client.post<{ key: string; id: string }>("/issue", body);
       logger.plain(`✅ Subtask created: ${issue.key} under ${args.parentIssueId}`);
-      return { success: true, data: { key: issue.key, parent: args.parentIssueId } };
+
+      // ── Move the subtask to "In Progress" (best effort) ─────
+      const transitionResult = await this.transitionToInProgress({ issueId: issue.key });
+      if (!transitionResult.success) {
+        logger.warn(`Could not transition ${issue.key} to In Progress: ${transitionResult.error ?? "unknown error"}`);
+      }
+
+      // ── Create a branch for the subtask in Bitbucket ────────
+      const branchResult = await BitbucketService.createBranch({
+        issueNumber: issue.key,
+        repoSlug: this.config?.Bitbucket?.selfHosted?.defaultRepoSlug ?? "",
+        startPoint: this.config?.Git?.defaultDevStream ?? "",
+        issueSummary: args.title,
+      });
+      if (!branchResult.success) {
+        return { success: false, error: branchResult.error };
+      }
+
+      return {
+        success: true,
+        data: {
+          key: issue.key,
+          parent: args.parentIssueId,
+          branch: branchResult.data?.branchName,
+          latestCommit: branchResult.data?.latestCommit,
+        },
+      };
     } catch (e: any) {
       return { success: false, error: e.message };
     }
@@ -183,9 +211,9 @@ export class JiraService {
     }
   }
 
-  /**
-   * Get available transitions for an issue (useful for finding the right transition ID).
-   */
+  // /**
+  //  * Get available transitions for an issue (useful for finding the right transition ID).
+  //  */
   static async getTransitions(args: { issueKey: string }): Promise<ToolResult> {
     try {
       const data = await this.client.get<{ transitions: Array<{ id: string; name: string; to: { name: string } }> }>(
@@ -193,6 +221,53 @@ export class JiraService {
       );
       logger.plain(`✅ Found ${data.transitions.length} transition(s) for ${args.issueKey}`);
       return { success: true, data: { transitions: data.transitions } };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  /**
+   * Move an issue to "In Progress".
+   *
+   * If a direct transition to "In Progress" is available (e.g. from "Assigned"),
+   * it is used. Otherwise the issue is first transitioned to "Assigned"
+   * (e.g. from "Open") and then to "In Progress".
+   *
+   * Hidden tool — registered in the registry but NOT listed in the menu.
+   */
+  static async transitionToInProgress(args: { issueId: string }): Promise<ToolResult> {
+    try {
+      const { issueId } = args;
+      logger.info(`Moving ${issueId} to In Progress`);
+
+      // 1) Direct transition to "In Progress" (e.g. from "Assigned")
+      let transitions = await fetchTransitions(this.client, issueId);
+      const direct = findTransition(transitions, "In Progress");
+      if (direct) {
+        await applyTransition(this.client, issueId, direct.id);
+        logger.success(`✅ ${issueId} transitioned to In Progress`);
+        return { success: true, data: { issueId, status: "In Progress" } };
+      }
+
+      // 2) Fallback: "Open" → "Assigned", then "Assigned" → "In Progress"
+      const toAssigned = findTransition(transitions, "Assigned");
+      if (toAssigned) {
+        await applyTransition(this.client, issueId, toAssigned.id);
+        logger.plain(`✅ ${issueId} transitioned to Assigned`);
+      }
+
+      transitions = await fetchTransitions(this.client, issueId);
+      const retry = findTransition(transitions, "In Progress");
+      if (retry) {
+        await applyTransition(this.client, issueId, retry.id);
+        logger.success(`✅ ${issueId} transitioned to In Progress`);
+        return { success: true, data: { issueId, status: "In Progress" } };
+      }
+
+      return {
+        success: false,
+        error: `No transition to "In Progress" (or via "Assigned") available for ${issueId}`,
+      };
     } catch (e: any) {
       return { success: false, error: e.message };
     }
