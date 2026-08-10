@@ -1,5 +1,5 @@
-import { colors, reset } from "../configs/global-configs.js";
-import { logger } from "./logger.js";
+import { colors, reset } from "../../configs/global-configs.js";
+import { logger } from "../logger.js";
 
 // ── Small inline style helpers (avoids coupling to logger internals) ─
 const style = {
@@ -100,5 +100,3 @@ export function logIssueList(
     }
   });
 }
-
-

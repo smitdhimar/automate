@@ -237,6 +237,22 @@ export const jiraTools: ToolDefinition[] = [
         ],
         handler: JiraService.transitionSubtaskToDone.bind(JiraService),
         listTool: true
+    },
+    {
+        id: "jira_transitionToInProgress",
+        category: "Jira",
+        name: "Transition to In Progress",
+        description: "Move an issue to 'In Progress'. Uses a direct transition if available, otherwise falls back to 'Open' → 'Assigned' → 'In Progress'.",
+        arguments: [
+            {
+                name: "issueId",
+                label: "Issue ID (e.g. EL-12345)",
+                type: "string",
+                required: true
+            }
+        ],
+        handler: JiraService.transitionToInProgress.bind(JiraService),
+        listTool: false
     }
 ]
 
