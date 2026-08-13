@@ -46,6 +46,12 @@ export class GitService {
     // checks out to specified branch
     static async checkout(args: { branch: string, origin?: string }): Promise<ToolResult> {
         try {
+            // Stash any uncommitted changes before switching branches
+            const stashRes = await GitService.stash();
+            if (!stashRes.success) {
+                return { success: false, error: `Failed to stash changes before checkout: ${stashRes.error}` };
+            }
+
             const result = await git.branch();
             const branches = result?.all;
             if(!branches.includes(args.branch)){
@@ -55,7 +61,17 @@ export class GitService {
 
             logger.plain(checkoutResponse);
 
-            return { success: true, data: { branch: args.branch } };
+            // Restore the stashed changes after checkout
+            const stashPopRes = await GitService.stashPop();
+
+            return {
+                success: true,
+                data: {
+                    branch: args.branch,
+                    stash: stashRes.data,
+                    stashPop: stashPopRes.success ? stashPopRes.data : { error: stashPopRes.error },
+                },
+            };
         } catch (e: any) {
             return { success: false, error: e.message };
         }

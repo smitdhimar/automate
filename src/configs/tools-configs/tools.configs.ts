@@ -45,7 +45,7 @@ export const gitTools: ToolDefinition[] = [
         ],
         handler: GitService.checkout,
         listTool: true,
-        helperStr: "git checkout <branch-name>"
+        helperStr: "stash - conditional fetch - checkout - stash pop"
 
     },
     {
