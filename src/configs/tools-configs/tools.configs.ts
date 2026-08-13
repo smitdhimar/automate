@@ -317,36 +317,6 @@ export const bitbucketTools: ToolDefinition[] = [
         handler: BitbucketService.createPullRequest.bind(BitbucketService),
         listTool: true
     },
-    {
-        id: "bitbucket_autoMerge",
-        category: "Bitbucket",
-        name: "Auto-Merge PR",
-        description: "Attempt to auto-merge a pull request in Bitbucket (selfHosted / Data Center).",
-        arguments: [
-            {
-                name: "prId",
-                label: "Pull Request ID",
-                type: "number",
-                required: true
-            },
-            {
-                name: "repoSlug",
-                label: "Repo Slug",
-                type: "string",
-                required: true,
-                default: defaultRepoSlug
-            },
-            {
-                name: "message",
-                label: "Merge Message",
-                type: "string",
-                required: true,
-                default: "Pull request Merge"
-            }
-        ],
-        handler: BitbucketService.autoMergePullRequest.bind(BitbucketService),
-        listTool: true
-    }
 ]
 
 export const userInteractionTools: ToolDefinition[] = [
@@ -381,5 +351,5 @@ export const userInteractionTools: ToolDefinition[] = [
 export const orderForTools = {
     "Git":['git_stash', 'git_add', 'git_commit', 'git_push', 'git_stashPop', 'git_checkout', 'git_status', 'git_pull', ],
     "Jira":['jira_createSubtask', 'jira_listIssues', 'jira_listSubtasks', 'jira_transitionToDone'],
-    "Bitbucket":['bitbucket_createBranch', 'bitbucket_createPR', 'bitbucket_autoMerge']
+    "Bitbucket":['bitbucket_createBranch', 'bitbucket_createPR']
 }
