@@ -131,6 +131,19 @@ export class BitbucketService {
   }
 
   /**
+   * Build the web UI URL for a pull request.
+   */
+  private static getPullRequestUrl(projectKey: string, repoSlug: string, prId: number): string {
+    const bbConfig = this.rawConfig?.Bitbucket as BitbucketConfig | undefined;
+    if (bbConfig?.hosting === "cloud") {
+      const workspace = bbConfig.cloud?.workspace ?? "";
+      return `https://bitbucket.org/${workspace}/${repoSlug}/pull-requests/${prId}`;
+    }
+    const baseUrl = (bbConfig?.selfHosted?.baseUrl ?? "").replace(/\/+$/, "");
+    return `${baseUrl}/projects/${encodeURIComponent(projectKey)}/repos/${encodeURIComponent(repoSlug)}/pull-requests/${prId}`;
+  }
+
+  /**
    * Create a pull request in Bitbucket (selfHosted / Data Center).
    *
    * POST {baseUrl}/rest/api/1.0/projects/{projectKey}/repos/{repoSlug}/pull-requests
@@ -176,8 +189,27 @@ export class BitbucketService {
         body,
       );
 
-      logger.plain(`✅ PR #${result.id} created: ${result.title}`);
-      return { success: true, data: { prId: result.id, version: result.version, title: result.title, state: result.state } };
+      const prUrl = this.getPullRequestUrl(projectKey, repoSlug, result.id);
+      logger.plain(`✅ PR ${prUrl} created.`);
+
+      // Auto-merge the newly created PR automatically — no separate tool needed.
+      const mergeRes = await this.autoMergePullRequest({
+        prId: result.id,
+        repoSlug,
+        message: `Pull request #${result.id}`,
+      });
+
+      return {
+        success: true,
+        data: {
+          prId: result.id,
+          version: result.version,
+          title: result.title,
+          state: result.state,
+          prUrl,
+          autoMerge: mergeRes,
+        },
+      };
     } catch (e: any) {
       return { success: false, error: e.message };
     }
