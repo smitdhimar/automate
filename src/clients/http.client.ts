@@ -31,7 +31,7 @@ export class HttpClient {
     if (opts.body && opts.method !== "GET") {
       init.body = JSON.stringify(opts.body);
     }
-    console.log('init?.body :>> ', init?.body);
+
     const res = await fetch(url, init);
 
     if (!res.ok) {
