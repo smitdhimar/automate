@@ -62,6 +62,11 @@ export class ToolRegistry {
     if (!tool) {
       throw new Error(`Tool "${id}" not found`);
     }
+    Object.keys(args).forEach((key) => {
+      if(typeof args[key] === "string"){
+        args[key] = args[key].trim();
+      }
+    });
     const result = await tool.handler(args);
     return result;
   }
