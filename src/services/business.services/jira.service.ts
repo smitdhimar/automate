@@ -66,40 +66,7 @@ export class JiraService {
       return { success: false, error: e.message };
     }
   }
-
-  static async createIssue(args: { summary: string; description?: string }): Promise<ToolResult> {
-    try {
-      logger.info(`Creating Jira issue in ${this.projectKey}: ${args.summary}`);
-
-      const body: Record<string, unknown> = {
-        fields: {
-          project: { key: this.projectKey },
-          summary: args.summary,
-          issuetype: { name: "Task" },
-        },
-      };
-
-      if (args.description) {
-        (body.fields as Record<string, unknown>).description = {
-          type: "doc",
-          version: 1,
-          content: [
-            {
-              type: "paragraph",
-              content: [{ type: "text", text: args.description }],
-            },
-          ],
-        };
-      }
-
-      const issue = await this.client.post<{ key: string }>("/issue", body);
-      logger.plain(`✅ Issue created: ${issue.key}`);
-      return { success: true, data: { key: issue.key } };
-    } catch (e: any) {
-      return { success: false, error: e.message };
-    }
-  }
-
+  
   static async createSubtask(args: {
     parentIssueId: string;
     title: string;
