@@ -4,6 +4,7 @@ import { BitbucketClient } from "../../clients/bitbucket.client.js";
 import type { BitbucketConfig } from "../../types/configs/client-configs.types.js";
 import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
 import { GitService } from "./git.service.js";
+import { JiraService } from "./jira.service.js";
 
 export class BitbucketService {
 
@@ -86,10 +87,8 @@ export class BitbucketService {
       // ── Resolve issue summary ────────────────────────────────
       let summary = args.issueSummary;
       if (!summary) {
-        const res = await this.client.get<{ issues: Array<{ key: string; fields: { summary: string } }> }>(
-          `/search?jql=key=${encodeURIComponent(args.issueNumber)}&fields=summary`,
-        );
-        summary = res?.issues?.[0]?.fields?.summary;
+        const res = await JiraService.getObjectiveSummary({issueNumber: args.issueNumber});
+        summary = res?.data?.summary;
       }
       if (!summary) {
         throw new Error(`Could not fetch summary for issue ${args.issueNumber}`);

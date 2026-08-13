@@ -292,4 +292,21 @@ export class JiraService {
       return { success: false, error: e.message };
     }
   }
+
+  // get objective summary
+  static async getObjectiveSummary(args:{issueNumber: string}): Promise<ToolResult> {
+    try{  
+      const res = await this.client.get<{ issues: Array<{ key: string; fields: { summary: string } }> }>(
+          `/search?jql=key=${encodeURIComponent(args.issueNumber)}&fields=summary`,
+        );
+      const summary = res?.issues?.[0]?.fields?.summary;
+      if(!summary){
+        return { success: false }
+      }
+      return { success: true, data: {summary: summary}};
+    }
+    catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
 }
