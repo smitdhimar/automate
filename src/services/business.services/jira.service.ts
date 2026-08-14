@@ -55,7 +55,7 @@ export class JiraService {
     try {
       logger.info(`Listing Jira subtasks for project: ${this.projectKey}`);
       const data = await this.client.get<{ issues: unknown[] }>(
-        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=summary,fixVersions,issuetype,status`,
+        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status NOT IN ("Completed", "Done")&fields=summary,fixVersions,issuetype,status`,
       );
 
       logger.success(`Found ${data?.issues?.length} subtask(s)`);
