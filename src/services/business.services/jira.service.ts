@@ -55,7 +55,7 @@ export class JiraService {
     try {
       logger.info(`Listing Jira subtasks for project: ${this.projectKey}`);
       const data = await this.client.get<{ issues: unknown[] }>(
-        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=summary,fixVersions,issuetype,status`,
+        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status NOT IN ("Completed", "Done")&fields=summary,fixVersions,issuetype,status`,
       );
 
       logger.success(`Found ${data?.issues?.length} subtask(s)`);
@@ -147,6 +147,7 @@ export class JiraService {
   static async transitionSubtaskToDone(args: {
     issueKey: string;
     fixVersion: string;
+    source: string;
   }): Promise<ToolResult> {
     try {
       const transitionId = "71";
@@ -154,7 +155,7 @@ export class JiraService {
       logger.info(`Transitioning ${args.issueKey} to Done (transition id: ${transitionId})`);
 
       const jiraCfg = this.config?.Jira as JiraConfig | undefined;
-      const sourceVal = jiraCfg?.defaultSource;
+      const sourceVal = args.source;
 
       const fields: Record<string, unknown> = {
         resolution: { name: "Done" },
