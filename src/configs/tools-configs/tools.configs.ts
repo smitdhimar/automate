@@ -233,6 +233,13 @@ export const jiraTools: ToolDefinition[] = [
                 type: "string",
                 required: true,
                 default: defaultFixVersion
+            },
+            {
+                name: "source",
+                label: "Source",
+                type: "string",
+                required: true,
+                default: defaultSource
             }
         ],
         handler: JiraService.transitionSubtaskToDone.bind(JiraService),

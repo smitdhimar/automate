@@ -147,6 +147,7 @@ export class JiraService {
   static async transitionSubtaskToDone(args: {
     issueKey: string;
     fixVersion: string;
+    source: string;
   }): Promise<ToolResult> {
     try {
       const transitionId = "71";
@@ -154,7 +155,7 @@ export class JiraService {
       logger.info(`Transitioning ${args.issueKey} to Done (transition id: ${transitionId})`);
 
       const jiraCfg = this.config?.Jira as JiraConfig | undefined;
-      const sourceVal = jiraCfg?.defaultSource;
+      const sourceVal = args.source;
 
       const fields: Record<string, unknown> = {
         resolution: { name: "Done" },
