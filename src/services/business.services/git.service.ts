@@ -2,7 +2,7 @@ import { simpleGit, StatusResult } from "simple-git";
 import { logger } from "../../utils/logger.js";
 import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
 import { ConfigService } from "../cli.services/config.service.js";
-import { PromptService } from "../cli.services/prompt.service.js";
+import { UserInteractionService } from "./user-interaction.service.js";
 import { validateGitAddInput, getFilePathsFromIndices } from "../../utils/utilsForServices.ts/gitServiceUtils.js";
 import { colors } from "../../configs/global-configs.js";
 
@@ -140,7 +140,7 @@ export class GitService {
             }
 
             const indexedFileArr: Array<{ index: number; path: string }> = statusResponse.data.indexedFileArr;
-            const answer = await PromptService.collectAnswer("Enter comma separated index values to add, or enter '.' to add all: ");
+            const answer = await UserInteractionService.askText("Enter comma separated index values to add, or enter '.' to add all: ");
 
             if (!answer || !validateGitAddInput(answer)) {
                 return { success: false, error: "Invalid input. Expected '.' or comma-separated numbers (e.g., '1,2,3')." };

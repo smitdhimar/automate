@@ -8,6 +8,7 @@ import { JiraClient } from "../../clients/jira.client.js";
 import type { JiraConfig } from "../../types/configs/client-configs.types.js";
 import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
 import { applyTransition, fetchTransitions, findTransition } from "../../utils/utilsForServices.ts/jiraServiceUtils.js";
+import { askForMissing } from "../../utils/userInputUtils.js";
 
 export class JiraService {
 
@@ -55,7 +56,7 @@ export class JiraService {
     try {
       logger.info(`Listing Jira subtasks for project: ${this.projectKey}`);
       const data = await this.client.get<{ issues: unknown[] }>(
-        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status NOT IN ("Completed", "Done")&fields=summary,fixVersions,issuetype,status`,
+        `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status NOT IN ("Complete", "Done")&fields=summary,fixVersions,issuetype,status`,
       );
 
       logger.success(`Found ${data?.issues?.length} subtask(s)`);
@@ -72,6 +73,8 @@ export class JiraService {
     title: string;
     source: string;
     fixVersion?: string;
+    repoSlug?: string;
+    startPoint?: string;
   }): Promise<ToolResult> {
     try {
       logger.info(`Creating subtask under ${args.parentIssueId} in project ${this.projectKey}`);
@@ -115,10 +118,27 @@ export class JiraService {
       }
 
       // ── Create a branch for the subtask in Bitbucket ────────
+      // Ask the user for the repo slug & start point when they weren't supplied —
+      // config values are offered as pre-filled defaults, not silently used.
+      const { repoSlug, startPoint } = await askForMissing([
+        {
+          name: "repoSlug",
+          message: "Repo slug for the new branch?",
+          current: args.repoSlug,
+          default: this.config?.Bitbucket?.selfHosted?.defaultRepoSlug,
+        },
+        {
+          name: "startPoint",
+          message: "Branch to create the new branch from (start point)?",
+          current: args.startPoint,
+          default: this.config?.Git?.defaultDevStream,
+        },
+      ]);
+
       const branchResult = await BitbucketService.createBranch({
         issueNumber: issue.key,
-        repoSlug: this.config?.Bitbucket?.selfHosted?.defaultRepoSlug ?? "",
-        startPoint: this.config?.Git?.defaultDevStream ?? "",
+        repoSlug,
+        startPoint,
         issueSummary: args.title,
       });
       if (!branchResult.success) {
