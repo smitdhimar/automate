@@ -289,6 +289,12 @@ export const bitbucketTools: ToolDefinition[] = [
                 type: "string",
                 required: true,
                 default: defaultDevStream
+            },
+            {
+                name: "suffix",
+                label: "Branch name suffix (optional — appended to the end of the branch name)",
+                type: "string",
+                required: false
             }
         ],
         handler: BitbucketService.createBranch.bind(BitbucketService),

@@ -77,7 +77,8 @@ export class BitbucketService {
     issueNumber: string;
     repoSlug: string;
     startPoint: string;
-    issueSummary?: string
+    issueSummary?: string;
+    suffix?: string;
   }): Promise<ToolResult> {
     try {
       const projectKey = this.projectKey;
@@ -95,19 +96,29 @@ export class BitbucketService {
       }
 
       // ── Build branch name ────────────────────────────────────
-      // feature/EL-12345-some-description (max 100 chars)
-      const slug = summary
+      // feature/EL-12345[-summary-slug][-user-suffix] (max 100 chars)
+      const summarySlug = summary
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
-      const suffix = slug.length > 0 ? `-${slug}` : "";
+      const userSuffix = (args.suffix ?? "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
       const maxLen = 100;
       const prefix = `feature/${args.issueNumber}`;
-      // Truncate slug so the full name fits within maxLen
-      const available = maxLen - prefix.length - 1; // -1 for the hyphen
-      const branchName = available > 0 && slug.length > available
-        ? `${prefix}-${slug.slice(0, available)}`
-        : `${prefix}${suffix}`;
+
+      // Suffix is appended to the end of the branch name only when explicitly
+      // provided (e.g. the user calls bitbucket_createBranch with a suffix).
+      // The auto-created branch from createSubtask never passes a suffix.
+      let branchName = prefix;
+      if (summarySlug) branchName += `-${summarySlug}`;
+      if (userSuffix) branchName += `-${userSuffix}`;
+
+      // Truncate to maxLen (prefix stays intact) and drop trailing hyphens.
+      if (branchName.length > maxLen) {
+        branchName = branchName.slice(0, maxLen).replace(/-+$/, "");
+      }
 
       logger.info(`Creating branch ${branchName} from ${startPoint} in ${projectKey}/${repoSlug}`);
 
