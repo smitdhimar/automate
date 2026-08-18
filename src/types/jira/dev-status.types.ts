@@ -14,8 +14,15 @@ export interface DevStatusCommit {
 export interface DevStatusBranch {
   name: string;
   url?: string;
-  createBy?: string;
-  lastCommit?: DevStatusCommit;
+  createPullRequestUrl?: string;
+  repository?: Repository;
+}
+
+export interface Repository{
+  name?: string, 
+  avatar?: string, 
+  avatarDescription?: string, 
+  url?: string, 
 }
 
 export interface DevStatusReviewer {
@@ -45,6 +52,8 @@ export interface DevStatusRepository {
 export interface DevStatusDetail {
   instance?: { name?: string; type?: string; baseUrl?: string };
   repositories?: DevStatusRepository[];
+  branches?: any[],
+  pullRequests?: any[]
 }
 
 export interface DevStatusResponse {

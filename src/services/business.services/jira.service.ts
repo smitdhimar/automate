@@ -11,6 +11,7 @@ import { applyTransition, fetchTransitions, findTransition } from "../../utils/u
 import { askForMissing } from "../../utils/userInputUtils.js";
 import type {
   DevStatusBranch,
+  DevStatusDetail,
   DevStatusPullRequest,
   IssueDevStatus,
 } from "../../types/jira/dev-status.types.js";
@@ -78,9 +79,8 @@ export class JiraService {
       // (branches & pull requests) via the dev-status API.
       const devStatus: IssueDevStatus[] = await Promise.all(
         issues.map(async (issue: any) => {
-          const [branches, pullRequests] = await Promise.all([
-            this.fetchDevStatus(issue.id, "branch"),
-            this.fetchDevStatus(issue.id, "pullrequest"),
+          const {branches, pullRequests} = await Promise.all([
+            this.fetchDevStatus(issue.id),
           ]);
           return {
             url: this.getIssueUrl(issue.key),
@@ -346,25 +346,15 @@ export class JiraService {
    */
   private static async fetchDevStatus(
     issueId: string,
-    dataType: "branch",
-  ): Promise<DevStatusBranch[]>;
-  private static async fetchDevStatus(
-    issueId: string,
-    dataType: "pullrequest",
-  ): Promise<DevStatusPullRequest[]>;
-  private static async fetchDevStatus(
-    issueId: string,
-    dataType: "branch" | "pullrequest",
-  ): Promise<DevStatusBranch[] | DevStatusPullRequest[]> {
+  ): Promise<DevStatusDetail> {
     try {
-      const res = await this.client.getDevStatus(issueId, dataType);
-      const repos = res?.detail?.[0]?.repositories ?? [];
-      if (dataType === "branch") {
-        return repos.flatMap((repo) => repo.branches ?? []);
-      }
-      return repos.flatMap((repo) => repo.pullRequests ?? []);
+      const res = await this.client.getDevStatus(issueId);
+      
+      const branches = res?.detail?.[0]?.branches;
+      const pullRequests = res?.detail?.[0]?.pullRequests;
+      return {branches, pullRequests}
     } catch {
-      return [];
+      return {};
     }
   }
 }
