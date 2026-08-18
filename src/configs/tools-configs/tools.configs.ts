@@ -118,7 +118,7 @@ export const gitTools: ToolDefinition[] = [
         id: "git_commit",
         category: "Git",
         name: "Commit",
-        description: "Commit to specific branch wiht EL number & message",
+        description: "Commit to specific branch w/ branchName as prefix(conditionally)",
         arguments: [
             {
                 name: "message",
