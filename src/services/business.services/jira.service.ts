@@ -212,8 +212,7 @@ export class JiraService {
         // ── Config-driven fields ─────────────────────────────
         ...(args.fixVersion ? { fixVersions: [{ name: args.fixVersion }] } : {}),
         // ── Custom fields from API doc ───────────────────────
-        ...(sourceVal ? { "customfield_10313": sourceVal } : {}),
-        ...(sourceVal ? { "customfield_10239": { value: sourceVal } } : {}),
+        ...(sourceVal ? { "customfield_10313": sourceVal } : {}), // source
       };
 
       const body: Record<string, unknown> = {
