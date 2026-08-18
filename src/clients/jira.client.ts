@@ -1,5 +1,6 @@
 import { enableCloudSupport } from "../configs/global-configs.js";
 import type { JiraConfig } from "../types/configs/client-configs.types.js";
+import type { DevStatusResponse } from "../types/jira/dev-status.types.js";
 import { IProductClient } from "./base.client.js";
 
 /**
@@ -97,5 +98,22 @@ export class JiraClient extends IProductClient {
     }
     const encoded = Buffer.from(`${username}:${password}`).toString("base64");
     return { Authorization: `Basic ${encoded}` };
+  }
+
+  /**
+   * Fetch dev-status (branches / pull requests) linked to an issue.
+   *
+   * Note: this endpoint lives under `/rest/dev-status/latest/…`, NOT under the
+   * versioned `/rest/api/2` or `/rest/api/3` prefix, so it bypasses `apiPrefix`.
+   */
+  getDevStatus(
+    issueId: string | number,
+    dataType: "branch" | "pullrequest",
+  ): Promise<DevStatusResponse> {
+    const path =
+      `/rest/dev-status/latest/issue/detail` +
+      `?issueId=${encodeURIComponent(String(issueId))}` +
+      `&applicationType=stash&dataType=${dataType}`;
+    return this.http.get<DevStatusResponse>(this.baseUrl, path, this.headers);
   }
 }

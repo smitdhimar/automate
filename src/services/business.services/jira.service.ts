@@ -9,6 +9,11 @@ import type { JiraConfig } from "../../types/configs/client-configs.types.js";
 import type { ToolResult } from "../../types/configs/ui-configs.types/tool-configs.types.js";
 import { applyTransition, fetchTransitions, findTransition } from "../../utils/utilsForServices.ts/jiraServiceUtils.js";
 import { askForMissing } from "../../utils/userInputUtils.js";
+import type {
+  DevStatusBranch,
+  DevStatusPullRequest,
+  IssueDevStatus,
+} from "../../types/jira/dev-status.types.js";
 
 export class JiraService {
 
@@ -55,14 +60,32 @@ export class JiraService {
   static async listSubtasks(): Promise<ToolResult> {
     try {
       logger.info(`Listing Jira subtasks for project: ${this.projectKey}`);
-      const data = await this.client.get<{ issues: unknown[] }>(
+      const data = await this.client.get<{ issues: any[] }>(
         `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype in subTaskIssueTypes() and status NOT IN ("Complete", "Done")&fields=summary,fixVersions,issuetype,status`,
       );
 
-      logger.success(`Found ${data?.issues?.length} subtask(s)`);
-      logIssueList(data.issues as any[]);
+      const issues = data?.issues ?? [];
+      logger.success(`Found ${issues.length} subtask(s)`);
 
-      return { success: true, data: { issues: data.issues } };
+      // Enrich each subtask with its Jira link and dev-status
+      // (branches & pull requests) via the dev-status API.
+      const devStatus: IssueDevStatus[] = await Promise.all(
+        issues.map(async (issue: any) => {
+          const [branches, pullRequests] = await Promise.all([
+            this.fetchDevStatus(issue.id, "branch"),
+            this.fetchDevStatus(issue.id, "pullrequest"),
+          ]);
+          return {
+            url: this.getIssueUrl(issue.key),
+            branches,
+            pullRequests,
+          };
+        }),
+      );
+
+      logIssueList(issues, devStatus);
+
+      return { success: true, data: { issues, devStatus } };
     } catch (e: any) {
       return { success: false, error: e.message };
     }
@@ -295,6 +318,47 @@ export class JiraService {
     }
     catch (e: any) {
       return { success: false, error: e.message };
+    }
+  }
+
+  /**
+   * Jira browse URL for an issue key (used for the clickable hyperlink).
+   */
+  private static getIssueUrl(issueKey: string): string {
+    const jiraCfg = this.config?.Jira as JiraConfig | undefined;
+    const hosting = jiraCfg?.hosting ?? "selfHosted";
+    const baseUrl =
+      hosting === "cloud"
+        ? `https://${jiraCfg?.cloud?.site}.atlassian.net`
+        : (jiraCfg?.selfHosted?.baseUrl ?? "").replace(/\/+$/, "");
+    return `${baseUrl}/browse/${encodeURIComponent(issueKey)}`;
+  }
+
+  /**
+   * Fetch branches or pull requests linked to an issue via the dev-status API.
+   * Failures are swallowed so a missing dev-status never breaks the listing.
+   */
+  private static async fetchDevStatus(
+    issueId: string,
+    dataType: "branch",
+  ): Promise<DevStatusBranch[]>;
+  private static async fetchDevStatus(
+    issueId: string,
+    dataType: "pullrequest",
+  ): Promise<DevStatusPullRequest[]>;
+  private static async fetchDevStatus(
+    issueId: string,
+    dataType: "branch" | "pullrequest",
+  ): Promise<DevStatusBranch[] | DevStatusPullRequest[]> {
+    try {
+      const res = await this.client.getDevStatus(issueId, dataType);
+      const repos = res?.detail?.[0]?.repositories ?? [];
+      if (dataType === "branch") {
+        return repos.flatMap((repo) => repo.branches ?? []);
+      }
+      return repos.flatMap((repo) => repo.pullRequests ?? []);
+    } catch {
+      return [];
     }
   }
 }
