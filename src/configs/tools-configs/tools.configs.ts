@@ -307,12 +307,6 @@ export const bitbucketTools: ToolDefinition[] = [
         description: "Create a pull request in Bitbucket (selfHosted / Data Center). Uses project key and repo slug from config.",
         arguments: [
             {
-                name: "title",
-                label: "PR Title",
-                type: "string",
-                required: true
-            },
-            {
                 name: "toBranch",
                 label: "Target Branch",
                 type: "string",
