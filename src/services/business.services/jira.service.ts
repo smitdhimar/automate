@@ -44,14 +44,21 @@ export class JiraService {
   static async listIssues(): Promise<ToolResult> {
     try {
       logger.info(`Listing Jira issues for project: ${this.projectKey}`);
-      const data = await this.client.get<{ issues: unknown[] }>(
+      const data = await this.client.get<{ issues: any[] }>(
         `/search?jql=project=${encodeURIComponent(this.projectKey)} and assignee=CurrentUser() and issuetype not in subTaskIssueTypes() and status IN ("To Do", "In Progress", "Under Review", "Assigned")&fields=summary,fixVersions,issuetype,status`,
       );
 
-      logger.success(`Found ${data?.issues?.length} issue(s)`);
-      logIssueList(data.issues as any[]);
+      const issues = data?.issues ?? [];
+      logger.success(`Found ${issues.length} issue(s)`);
 
-      return { success: true, data: { issues: data.issues } };
+      // Each issue key is a clickable link to Jira (no dev-status here).
+      const devStatus: IssueDevStatus[] = issues.map((issue: any) => ({
+        url: this.getIssueUrl(issue.key),
+      }));
+
+      logIssueList(issues, devStatus);
+
+      return { success: true, data: { issues, devStatus } };
     } catch (e: any) {
       return { success: false, error: e.message };
     }
