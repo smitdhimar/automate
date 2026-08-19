@@ -160,7 +160,6 @@ export class BitbucketService {
    * POST {baseUrl}/rest/api/1.0/projects/{projectKey}/repos/{repoSlug}/pull-requests
    */
   static async createPullRequest(args: {
-    title: string;
     toBranch: string;
     repoSlug: string;
   }): Promise<ToolResult> {
@@ -170,10 +169,10 @@ export class BitbucketService {
       const branchRes = await GitService.getBranchName();
       const fromBranch = branchRes.data.branch;
 
-      logger.info(`Creating PR: ${args.title} (${fromBranch} → ${args.toBranch})`);
+      logger.info(`Creating PR: (${fromBranch} -> ${args.toBranch})`);
 
       const body: Record<string, unknown> = {
-        title: args.title,
+        title: fromBranch,
         state: "OPEN",
         open: true,
         closed: false,

@@ -48,21 +48,21 @@ function truncate(text: string, maxLen: number): string {
 }
 
 // ── Dev-status rendering (branches & pull requests) ──────────
-function renderBranches(branches?: DevStatusBranch[]): string[] {
-  if (!branches?.length) return [];
-  const lines: string[] = [`  ${style.dim("branches")}     →`];
-  for (const b of branches) {
-    const commit = b.lastCommit
-      ? `${style.dim(b.lastCommit.displayId)} ${b.lastCommit.message}`
-      : "";
-    lines.push(
-      `    • ${hyperlink(b.name, b.url)}` +
-        (b.createBy ? ` ${style.dim(`(${b.createBy})`)}` : "") +
-        (commit ? ` ${style.dim(`— ${commit}`)}` : ""),
-    );
-  }
-  return lines;
-}
+// function renderBranches(branches?: DevStatusBranch[]): string[] {
+//   if (!branches?.length) return [];
+//   const lines: string[] = [`  ${style.dim("branches")}     →`];
+//   for (const b of branches) {
+//     const commit = b.lastCommit
+//       ? `${style.dim(b.lastCommit.displayId)} ${b.lastCommit.message}`
+//       : "";
+//     lines.push(
+//       `    • ${hyperlink(b.name, b.url)}` +
+//         (b.createBy ? ` ${style.dim(`(${b.createBy})`)}` : "") +
+//         (commit ? ` ${style.dim(`— ${commit}`)}` : ""),
+//     );
+//   }
+//   return lines;
+// }
 
 function renderPullRequests(prs?: DevStatusPullRequest[]): string[] {
   if (!prs?.length) return [];
@@ -105,7 +105,6 @@ export function logIssueFields(
   const prefix = options?.index != null ? `${options.index}. ` : "";
 
   // ── Extract field values ──────────────────────────────────
-  const issueType = fields.issuetype?.name ?? "N/A";
   const status = fields.status?.name ?? "N/A";
   const statusCategory = fields.status?.statusCategory?.name ?? "";
   const fixVersions: string[] = (fields.fixVersions ?? []).map(
@@ -119,7 +118,6 @@ export function logIssueFields(
   lines.push(`${prefix}${hyperlink(style.highlight(key), options?.url)}: ${fields.summary ?? ""}`);
 
   // Fields
-  lines.push(`  ${style.dim("issuetype")}    → ${issueType}`);
   lines.push(
     `  ${style.dim("status")}       → ${status}${statusCategory ? ` (${statusCategory})` : ""}`,
   );
@@ -128,7 +126,7 @@ export function logIssueFields(
   );
 
   // Dev-status — branches & pull requests linked to the subtask
-  lines.push(...renderBranches(options?.branches));
+  // lines.push(...renderBranches(options?.branches));
   lines.push(...renderPullRequests(options?.pullRequests));
 
   // ── Print ─────────────────────────────────────────────────

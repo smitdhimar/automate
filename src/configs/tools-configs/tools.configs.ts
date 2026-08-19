@@ -118,7 +118,7 @@ export const gitTools: ToolDefinition[] = [
         id: "git_commit",
         category: "Git",
         name: "Commit",
-        description: "Commit to specific branch wiht EL number & message",
+        description: "Commit to specific branch w/ branchName as prefix(conditionally)",
         arguments: [
             {
                 name: "message",
@@ -306,12 +306,6 @@ export const bitbucketTools: ToolDefinition[] = [
         name: "Create Pull Request",
         description: "Create a pull request in Bitbucket (selfHosted / Data Center). Uses project key and repo slug from config.",
         arguments: [
-            {
-                name: "title",
-                label: "PR Title",
-                type: "string",
-                required: true
-            },
             {
                 name: "toBranch",
                 label: "Target Branch",

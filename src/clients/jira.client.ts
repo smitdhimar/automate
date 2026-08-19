@@ -108,12 +108,11 @@ export class JiraClient extends IProductClient {
    */
   getDevStatus(
     issueId: string | number,
-    dataType: "branch" | "pullrequest",
   ): Promise<DevStatusResponse> {
     const path =
       `/rest/dev-status/latest/issue/detail` +
       `?issueId=${encodeURIComponent(String(issueId))}` +
-      `&applicationType=stash&dataType=${dataType}`;
+      `&applicationType=stash&dataType=pullRequests`; // only 1 api is there for pr and branches
     return this.http.get<DevStatusResponse>(this.baseUrl, path, this.headers);
   }
 }
