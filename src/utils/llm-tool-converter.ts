@@ -6,7 +6,8 @@ import type { LLMToolDefinition, LLMParameterSchema } from "../types/llm/llm.typ
  */
 function mapArgType(type: ToolArgument["type"]): LLMParameterSchema["type"] {
     switch (type) {
-        case "string": return "string";
+        case "string":
+        case "select": return "string";
         case "number": return "number";
         case "boolean": return "boolean";
     }
@@ -22,10 +23,15 @@ export function convertToolsToLLMFormat(tools: ToolDefinition[]): LLMToolDefinit
         const required: string[] = [];
 
         for (const arg of tool.arguments) {
-            properties[arg.name] = {
+            const schema: LLMParameterSchema = {
                 type: mapArgType(arg.type),
                 description: arg.label,
             };
+            // Expose dropdown choices as an enum so the LLM picks from them.
+            if (arg.options?.length) {
+                schema.enum = arg.options;
+            }
+            properties[arg.name] = schema;
             if (arg.required) {
                 required.push(arg.name);
             }

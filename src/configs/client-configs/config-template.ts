@@ -3,8 +3,9 @@ import { enableCloudSupport } from "../global-configs.js";
 export const DEFAULT_CONFIG = {
   Git: {
     commitPrefixEnabled: false,
-    defaultDevStream:
+    defaultDevStreams: [
       "your default branch to take pull from / create branch from",
+    ],
     gitTrackingFileExts: [
       "js",
       "properties",
@@ -21,7 +22,9 @@ export const DEFAULT_CONFIG = {
     hosting: "selfHosted",
     defaultProject: "your-default-project",
     defaultFixVersion: "yy.mm.dd",
-    defaultSource: "your-default-source",
+    defaultSources: [
+      "your-default-source",
+    ],
     assignee: "your-default-assignee",
     affectedFunctionalArea: "your-affected-functional-area",
     team: "your-team",
@@ -50,7 +53,9 @@ export const DEFAULT_CONFIG = {
       baseUrl: "https://bitbucket.your-company.com",
       apiToken: "your-bitbucket-api-token",
       defaultProjectKey: "your-project-key",
-      defaultRepoSlug: "your-repo-slug",
+      defaultRepoSlugs: [
+        "your-repo-slug",
+      ],
       reviewers: [
         "reviewer1Username",
       ],

@@ -110,7 +110,7 @@ export class JiraService {
       logger.info(`Creating subtask under ${args.parentIssueId} in project ${this.projectKey}`);
 
       const jiraCfg = this.config?.Jira as JiraConfig | undefined;
-      const sourceVal = args.source || jiraCfg?.defaultSource;
+      const sourceVal = args.source || jiraCfg?.defaultSources?.[0] || jiraCfg?.defaultSource;
       const fixVer = args.fixVersion || jiraCfg?.defaultFixVersion;
 
 
@@ -155,13 +155,13 @@ export class JiraService {
           name: "repoSlug",
           message: "Repo slug for the new branch?",
           current: args.repoSlug,
-          default: this.config?.Bitbucket?.selfHosted?.defaultRepoSlug,
+          default: this.config?.Bitbucket?.selfHosted?.defaultRepoSlugs?.[0] || this.config?.Bitbucket?.selfHosted?.defaultRepoSlug,
         },
         {
           name: "startPoint",
           message: "Branch to create the new branch from (start point)?",
           current: args.startPoint,
-          default: this.config?.Git?.defaultDevStream,
+          default: this.config?.Git?.defaultDevStreams?.[0] || this.config?.Git?.defaultDevStream,
         },
       ]);
 

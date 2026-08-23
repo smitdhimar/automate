@@ -34,11 +34,15 @@ export interface ToolArgument {
     type:
         | "string"
         | "number"
-        | "boolean";
+        | "boolean"
+        | "select";
 
     required: boolean;
 
     default?: string;
+
+    /** Choices rendered as a dropdown when `type` is "select". */
+    options?: string[];
 
     validator?(value: any): boolean;
 

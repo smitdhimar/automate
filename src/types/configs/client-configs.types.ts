@@ -18,6 +18,8 @@ export interface JiraConfig {
   defaultProject: string;
   defaultFixVersion?: string;
   defaultSource?: string;
+  /** Sources offered as dropdown choices for `source` arguments. */
+  defaultSources?: string[];
   assignee?: string;
   affectedFunctionalArea?: string;
   team?: string;
@@ -41,6 +43,8 @@ export interface BitbucketSelfHostedConfig {
   defaultProjectKey?: string;
   /** Optional. If omitted, the default repo slug from config is used. */
   defaultRepoSlug?: string;
+  /** Repo slugs offered as dropdown choices for repo-slot arguments. */
+  defaultRepoSlugs?: string[];
   /**
    * Bitbucket PR reviewers (list of usernames).
    * Required for config validation — can be an empty array `[]`.
