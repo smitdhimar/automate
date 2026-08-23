@@ -7,10 +7,29 @@ import { UserInteractionService } from "../../services/business.services/user-in
 
 const config = ConfigService.readConfig();
 
-const defaultDevStream = config?.Git?.defaultDevStream || undefined;
+/**
+ * Resolve a config value that may be a legacy single string or the new
+ * array format. Arrays drive the dropdown choices; a non-placeholder legacy
+ * string is used as a fallback for backward compatibility.
+ */
+function resolveList(arr: unknown, legacy: unknown): string[] {
+    const list = Array.isArray(arr)
+        ? arr.filter((v): v is string => typeof v === "string" && v.trim() !== "" && !v.includes("your-"))
+        : [];
+    if (list.length) return list;
+    return typeof legacy === "string" && legacy.trim() !== "" && !legacy.includes("your-")
+        ? [legacy]
+        : [];
+}
+
+// Branch / source / repo-slug lists drive the dropdown choices in the UI.
+const defaultDevStreams = resolveList(config?.Git?.defaultDevStreams, config?.Git?.defaultDevStream);
+const defaultDevStream = defaultDevStreams[0];
 const defaultFixVersion = config?.Jira?.defaultFixVersion || undefined;
-const defaultSource = config?.Jira?.defaultSource || undefined;
-const defaultRepoSlug = config?.Bitbucket?.selfHosted?.defaultRepoSlug || undefined;
+const defaultSources = resolveList(config?.Jira?.defaultSources, config?.Jira?.defaultSource);
+const defaultSource = defaultSources[0];
+const defaultRepoSlugs = resolveList(config?.Bitbucket?.selfHosted?.defaultRepoSlugs, config?.Bitbucket?.selfHosted?.defaultRepoSlug);
+const defaultRepoSlug = defaultRepoSlugs[0];
 
 export const gitTools: ToolDefinition[] = [
     {
@@ -95,9 +114,10 @@ export const gitTools: ToolDefinition[] = [
             {
                 name: "branch",
                 label: "Branch Name",
-                type: "string",
+                type: "select",
                 required: true,
-                default: defaultDevStream
+                default: defaultDevStream,
+                options: defaultDevStreams
             }
         ],
         handler: GitService.pullFrom,
@@ -207,9 +227,10 @@ export const jiraTools: ToolDefinition[] = [
             {
                 name: "source",
                 label: "Source",
-                type: "string",
+                type: "select",
                 required: true,
-                default: defaultSource
+                default: defaultSource,
+                options: defaultSources
             }
         ],
         handler: JiraService.createSubtask.bind(JiraService),
@@ -237,9 +258,10 @@ export const jiraTools: ToolDefinition[] = [
             {
                 name: "source",
                 label: "Source",
-                type: "string",
+                type: "select",
                 required: true,
-                default: defaultSource
+                default: defaultSource,
+                options: defaultSources
             }
         ],
         handler: JiraService.transitionSubtaskToDone.bind(JiraService),
@@ -279,16 +301,18 @@ export const bitbucketTools: ToolDefinition[] = [
             {
                 name: "repoSlug",
                 label: "Repo Slug",
-                type: "string",
+                type: "select",
                 required: true,
-                default: defaultRepoSlug
+                default: defaultRepoSlug,
+                options: defaultRepoSlugs
             },
             {
                 name: "startPoint",
                 label: "Start Point branch",
-                type: "string",
+                type: "select",
                 required: true,
-                default: defaultDevStream
+                default: defaultDevStream,
+                options: defaultDevStreams
             },
             {
                 name: "suffix",
@@ -309,16 +333,18 @@ export const bitbucketTools: ToolDefinition[] = [
             {
                 name: "toBranch",
                 label: "Target Branch",
-                type: "string",
+                type: "select",
                 required: true,
-                default: defaultDevStream
+                default: defaultDevStream,
+                options: defaultDevStreams
             },
             {
                 name: "repoSlug",
                 label: "Repo Slug",
-                type: "string",
+                type: "select",
                 required: true,
-                default: defaultRepoSlug
+                default: defaultRepoSlug,
+                options: defaultRepoSlugs
             }
         ],
         handler: BitbucketService.createPullRequest.bind(BitbucketService),

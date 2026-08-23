@@ -50,9 +50,12 @@ export class BitbucketService {
   private static resolveRepoSlug(argsRepoSlug?: string): string {
     if (argsRepoSlug) return argsRepoSlug;
     const bbConfig = this.rawConfig?.Bitbucket as BitbucketConfig | undefined;
-    const repoSlug = bbConfig?.selfHosted?.defaultRepoSlug;
+    const repoSlugs = bbConfig?.selfHosted?.defaultRepoSlugs;
+    const repoSlug = Array.isArray(repoSlugs) && repoSlugs.length
+      ? repoSlugs[0]
+      : bbConfig?.selfHosted?.defaultRepoSlug;
     if (repoSlug) return repoSlug;
-    throw new Error("No repo slug provided and no default configured in Bitbucket.selfHosted.defaultRepoSlug");
+    throw new Error("No repo slug provided and no default configured in Bitbucket.selfHosted.defaultRepoSlug(s)");
   }
 
   /**

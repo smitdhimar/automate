@@ -40,16 +40,18 @@ export class InquirerPrompter implements UserPrompter {
     }
 
     async select(message: string, choices: Array<string | { name: string; value: string }>, opts?: { default?: string }): Promise<string | null> {
-        const { value } = await inquirer.prompt<{ value: string }>([
-            {
-                type: "list",
-                name: "value",
-                message,
-                choices,
-                default: opts?.default,
-                theme: Theme,
-            },
-        ]);
+        const { value } = await inquirer.prompt<{ value: string }>(
+            [
+                {
+                    type: "list",
+                    name: "value",
+                    message,
+                    choices,
+                    default: opts?.default,
+                    theme: Theme,
+                },
+            ] as any,
+        );
         return value ?? null;
     }
 

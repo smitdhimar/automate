@@ -49,17 +49,43 @@ export class PromptService {
     static async collectArguments(args: ToolArgument[]): Promise<Record<string, any>> {
         if (args.length === 0) return {};
 
-        const questions = args.map(arg => ({
-            type: arg.type === "boolean" ? "confirm" : "input" as const,
-            name: arg.name,
-            message: `${arg.label}:`,
-            required: arg.required,
-            validate: arg.validator
-                ? (input: any) => arg.validator!(input)
-                : undefined,
-            theme: Theme,
-            default: arg?.default
-        }));
+        // Questions are built dynamically from tool definitions. inquirer's
+        // `prompt` expects a discriminated union keyed on the literal `type`
+        // ("input" | "confirm" | "list" | …), which a `.map()` can't infer
+        // (it widens `type` to `string`). Build the list loosely and let
+        // inquirer validate.
+        const questions: any[] = args.map(arg => {
+            // Dropdown (select) arguments: offer the config values as choices.
+            // Falls back to free-text input when no options are configured.
+            if (arg.type === "select" && arg.options?.length) {
+                const choices = [
+                    ...new Set([
+                        ...(arg.default && !arg.options.includes(arg.default) ? [arg.default] : []),
+                        ...arg.options,
+                    ]),
+                ];
+                return {
+                    type: "list",
+                    name: arg.name,
+                    message: `${arg.label}:`,
+                    choices,
+                    pageSize: 10,
+                    theme: Theme,
+                    default: arg.default && choices.includes(arg.default) ? arg.default : choices[0],
+                };
+            }
+            return {
+                type: arg.type === "boolean" ? "confirm" : "input" as const,
+                name: arg.name,
+                message: `${arg.label}:`,
+                required: arg.required,
+                validate: arg.validator
+                    ? (input: any) => arg.validator!(input)
+                    : undefined,
+                theme: Theme,
+                default: arg?.default
+            };
+        });
 
         const answers = await inquirer.prompt(questions);
         return answers;

@@ -33,6 +33,8 @@ export interface LLMToolDefinition {
 export interface LLMParameterSchema {
     type: "string" | "number" | "boolean";
     description: string;
+    /** Allowed values (e.g. for dropdown/select arguments). */
+    enum?: string[];
 }
 
 export interface LLMChoice {
