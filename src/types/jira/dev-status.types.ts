@@ -3,14 +3,6 @@
 // The endpoint returns the same shape for both dataTypes; the `branches`
 // array populates for dataType=branch and `pullRequests` for dataType=pullrequest.
 
-export interface DevStatusCommit {
-  id: string;
-  displayId: string;
-  authorTimestamp?: string;
-  message: string;
-  url?: string;
-}
-
 export interface DevStatusBranch {
   name: string;
   url?: string;
@@ -41,19 +33,10 @@ export interface DevStatusPullRequest {
   reviewers?: DevStatusReviewer[];
 }
 
-export interface DevStatusRepository {
-  name: string;
-  url?: string;
-  commits?: DevStatusCommit[];
-  branches?: DevStatusBranch[];
-  pullRequests?: DevStatusPullRequest[];
-}
-
 export interface DevStatusDetail {
   instance?: { name?: string; type?: string; baseUrl?: string };
-  repositories?: DevStatusRepository[];
-  branches?: any[],
-  pullRequests?: any[]
+  branches?: DevStatusBranch[],
+  pullRequests?: DevStatusPullRequest[]
 }
 
 export interface DevStatusResponse {

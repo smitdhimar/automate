@@ -79,13 +79,11 @@ export class JiraService {
       // (branches & pull requests) via the dev-status API.
       const devStatus: IssueDevStatus[] = await Promise.all(
         issues.map(async (issue: any) => {
-          const {branches, pullRequests} = await Promise.all([
-            this.fetchDevStatus(issue.id),
-          ]);
+          const devStatusDetails = await this.fetchDevStatus(issue.id, issue.key);
           return {
             url: this.getIssueUrl(issue.key),
-            branches,
-            pullRequests,
+            branches: devStatusDetails?.branches,
+            pullRequests: devStatusDetails?.pullRequests,
           };
         }),
       );
@@ -97,7 +95,7 @@ export class JiraService {
       return { success: false, error: e.message };
     }
   }
-  
+
   static async createSubtask(args: {
     parentIssueId: string;
     title: string;
@@ -314,8 +312,8 @@ export class JiraService {
   static async getObjectiveSummary(args:{issueNumber: string}): Promise<ToolResult> {
     try{  
       const res = await this.client.get<{ issues: Array<{ key: string; fields: { summary: string } }> }>(
-          `/search?jql=key=${encodeURIComponent(args.issueNumber)}&fields=summary`,
-        );
+        `/search?jql=key=${encodeURIComponent(args.issueNumber)}&fields=summary`,
+      );
       const summary = res?.issues?.[0]?.fields?.summary;
       if(!summary){
         return { success: false }
@@ -346,13 +344,19 @@ export class JiraService {
    */
   private static async fetchDevStatus(
     issueId: string,
+    issueKey: string
   ): Promise<DevStatusDetail> {
     try {
       const res = await this.client.getDevStatus(issueId);
-      
-      const branches = res?.detail?.[0]?.branches;
-      const pullRequests = res?.detail?.[0]?.pullRequests;
-      return {branches, pullRequests}
+      const branches:DevStatusBranch[] = res?.detail?.[0]?.branches?.
+                      filter((branch:DevStatusBranch) => branch?.name && branch?.name?.includes(issueKey)) ?? [];
+      const pullRequests:DevStatusPullRequest[] = res?.detail?.[0]?.pullRequests?.
+                      filter((pullRequest: DevStatusPullRequest) => pullRequest?.source?.branch?.includes(issueKey)) ?? [];
+
+      return {
+        branches: branches,
+        pullRequests: pullRequests,
+      };
     } catch {
       return {};
     }
