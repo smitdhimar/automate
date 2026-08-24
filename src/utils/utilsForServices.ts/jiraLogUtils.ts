@@ -48,21 +48,16 @@ function truncate(text: string, maxLen: number): string {
 }
 
 // ── Dev-status rendering (branches & pull requests) ──────────
-// function renderBranches(branches?: DevStatusBranch[]): string[] {
-//   if (!branches?.length) return [];
-//   const lines: string[] = [`  ${style.dim("branches")}     →`];
-//   for (const b of branches) {
-//     const commit = b.lastCommit
-//       ? `${style.dim(b.lastCommit.displayId)} ${b.lastCommit.message}`
-//       : "";
-//     lines.push(
-//       `    • ${hyperlink(b.name, b.url)}` +
-//         (b.createBy ? ` ${style.dim(`(${b.createBy})`)}` : "") +
-//         (commit ? ` ${style.dim(`— ${commit}`)}` : ""),
-//     );
-//   }
-//   return lines;
-// }
+function renderBranches(branches?: DevStatusBranch[]): string[] {
+  if (!branches?.length) return [];
+  const lines: string[] = [`  ${style.dim("branches")}     →`];
+  for (const b of branches) {
+    lines.push(
+      `    • ${hyperlink(b.name, b.url)}`
+    );
+  }
+  return lines;
+}
 
 function renderPullRequests(prs?: DevStatusPullRequest[]): string[] {
   if (!prs?.length) return [];
@@ -71,11 +66,8 @@ function renderPullRequests(prs?: DevStatusPullRequest[]): string[] {
     const dest = pr.destination?.branch
       ? ` ${style.dim(`→ ${pr.destination.branch}`)}`
       : "";
-    const reviewers = pr.reviewers?.length
-      ? ` ${style.dim(`[${pr.reviewers.map((r) => `${r.name}${r.approved ? " ✓" : ""}`).join(", ")}]`)}`
-      : "";
     lines.push(
-      `    • ${hyperlink(`${pr.id} ${pr.name}`, pr.url)} ${style.dim(`[${pr.status}]`)}${dest}${reviewers}`,
+      `    • ${hyperlink(`${pr.id} ${pr.name}`, pr.url)} ${style.dim(`[${pr.status}]`)}${dest}`,
     );
   }
   return lines;
@@ -126,7 +118,7 @@ export function logIssueFields(
   );
 
   // Dev-status — branches & pull requests linked to the subtask
-  // lines.push(...renderBranches(options?.branches));
+  lines.push(...renderBranches(options?.branches));
   lines.push(...renderPullRequests(options?.pullRequests));
 
   // ── Print ─────────────────────────────────────────────────

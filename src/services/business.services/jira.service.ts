@@ -79,7 +79,7 @@ export class JiraService {
       // (branches & pull requests) via the dev-status API.
       const devStatus: IssueDevStatus[] = await Promise.all(
         issues.map(async (issue: any) => {
-          const devStatusDetails = await this.fetchDevStatus(issue.id);
+          const devStatusDetails = await this.fetchDevStatus(issue.id, issue.key);
           return {
             url: this.getIssueUrl(issue.key),
             branches: devStatusDetails?.branches,
@@ -344,20 +344,19 @@ export class JiraService {
    */
   private static async fetchDevStatus(
     issueId: string,
+    issueKey: string
   ): Promise<DevStatusDetail> {
     try {
       const res = await this.client.getDevStatus(issueId);
       const branches:DevStatusBranch[] = res?.detail?.[0]?.branches?.
-                      filter((branch:DevStatusBranch) => branch?.name && branch?.name?.includes(issueId)) ?? [];
+                      filter((branch:DevStatusBranch) => branch?.name && branch?.name?.includes(issueKey)) ?? [];
       const pullRequests:DevStatusPullRequest[] = res?.detail?.[0]?.pullRequests?.
-                      filter((pullRequest: DevStatusPullRequest) => pullRequest?.source?.branch?.includes(issueId)) ?? [];
+                      filter((pullRequest: DevStatusPullRequest) => pullRequest?.source?.branch?.includes(issueKey)) ?? [];
 
       return {
         branches: branches,
         pullRequests: pullRequests,
       };
-      // return repos.flatMap((repo) => repo.branches ?? []);
-      // return repos.flatMap((repo) => repo.pullRequests ?? []);
     } catch {
       return {};
     }
