@@ -54,7 +54,7 @@ export class MenuService {
 
             // --- Normal tool path ---
             if(!ConfigService.isServiceCredsConfigured(selectedCategory)){
-                logger.warn(`No configuration found for category ${selectedCategory}. Try adding your credentials at ${ConfigService.configPath}`);
+                logger.warn(`No configuration found / Missing configuration properties for category ${selectedCategory}. Try adding your credentials at ${ConfigService.configPath}`);
                 continue;
             }
             // 3. Get tools for the selected category
