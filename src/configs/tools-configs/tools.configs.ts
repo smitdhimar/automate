@@ -32,7 +32,7 @@ export const gitTools: ToolDefinition[] = [
         id: "git_checkout",
         category: "Git",
         name: "Checkout Branch",
-        description: "Checkout a branch ( fetches if not in local )",
+        description: "Checkout a branch ( fetches if not in local ) - STASH - CONDITIONAL FETCH - CHECKOUT - STASH_POP",
         arguments: [
             {
                 name: "origin",
@@ -50,7 +50,7 @@ export const gitTools: ToolDefinition[] = [
         ],
         handler: GitService.checkout,
         listTool: true,
-        helperStr: "stash - conditional fetch - checkout - stash pop"
+        helperStr: "git checkout <origin> <branch>"
 
     },
     {
@@ -87,7 +87,7 @@ export const gitTools: ToolDefinition[] = [
         id: "git_pull",
         category: "Git",
         name: "Pull",
-        description: "Pull from specified origin & branch",
+        description: "Pull from specified origin & branch - STASH - PULL - STASH_POP",
         arguments: [
 
             {
@@ -151,18 +151,11 @@ export const gitTools: ToolDefinition[] = [
         id: "git_diff",
         category: "Git",
         name: "Diff",
-        description: "Show diff with color-coded output (red for removals, green for additions)",
-        arguments: [
-            {
-                name: "target",
-                label: "Target (branch or file)",
-                type: "string",
-                required: false
-            }
-        ],
+        description: "Show diff for user-selected tracked file(s)",
+        arguments: [],
         handler: GitService.diff,
         listTool: true,
-        helperStr: "git diff"
+        helperStr: "git diff -- <selected-files>"
     }
 ]
 
