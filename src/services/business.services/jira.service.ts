@@ -137,57 +137,35 @@ export class JiraService {
 
       const body: Record<string, unknown> = { fields };
 
-      // const issue = await this.client.post<{ key: string; id: string }>("/issue", body);
-      // logger.plain(`✅ Subtask created: ${issue.key} under ${args.parentIssueId}`);
+      const issue = await this.client.post<{ key: string; id: string }>("/issue", body);
+      logger.plain(`✅ Subtask created: ${issue.key} under ${args.parentIssueId}`);
 
-      // // ── Move the subtask to "In Progress" (best effort) ─────
-      // const transitionResult = await this.transitionToInProgress({ issueId: issue.key });
-      // if (!transitionResult.success) {
-      //   logger.warn(`Could not transition ${issue.key} to In Progress: ${transitionResult.error ?? "unknown error"}`);
-      // }
+      // ── Move the subtask to "In Progress" (best effort) ─────
+      const transitionResult = await this.transitionToInProgress({ issueId: issue.key });
+      if (!transitionResult.success) {
+        logger.warn(`Could not transition ${issue.key} to In Progress: ${transitionResult.error ?? "unknown error"}`);
+      }
 
-      // ── Create a branch for the subtask in Bitbucket ────────
-      // Ask the user for the repo slug & start point when they weren't
-      // supplied. Both are offered as dropdowns (config values as choices,
-      // config default pre-selected) — same UX as bitbucket_createBranch.
-      const bbCfg = this.config?.Bitbucket;
-      const repoSlugOptions = resolveList(bbCfg?.selfHosted?.defaultRepoSlugs, bbCfg?.selfHosted?.defaultRepoSlug);
-      const devStreamOptions = resolveList(this.config?.Git?.defaultDevStreams, this.config?.Git?.defaultDevStream);
-
-      const { repoSlug, startPoint } = await askForMissing([
-        {
-          name: "repoSlug",
-          message: "Repo slug for the new branch?",
-          current: args.repoSlug,
-          default: repoSlugOptions[0],
-          options: repoSlugOptions,
-        },
-        {
-          name: "startPoint",
-          message: "Branch to create the new branch from (start point)?",
-          current: args.startPoint,
-          default: devStreamOptions[0],
-          options: devStreamOptions,
-        },
-      ]);
-
-      const branchResult = await BitbucketService.createBranch({
-        issueNumber: 'asdf',
-        repoSlug,
-        startPoint,
-        issueSummary: args.title,
-      });
-      if (!branchResult.success) {
+      let branchResult: ToolResult | null = null;
+      if(args?.repoSlug && args?.startPoint){
+          branchResult = await BitbucketService.createBranch({
+          issueNumber: issue.key,
+          repoSlug: args.repoSlug,
+          startPoint: args.startPoint,
+          issueSummary: args.title,
+        });
+      }
+      if (branchResult && !branchResult.success) {
         return { success: false, error: branchResult.error };
       }
 
       return {
         success: true,
         data: {
-          key: `df`,
+          key: issue.key,
           parent: args.parentIssueId,
-          branch: branchResult.data?.branchName,
-          latestCommit: branchResult.data?.latestCommit,
+          branch: branchResult?.data?.branchName,
+          latestCommit: branchResult?.data?.latestCommit,
         },
       };
     } catch (e: any) {

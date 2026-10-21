@@ -49,6 +49,9 @@ export class PromptService {
     static async collectArguments(args: ToolArgument[]): Promise<Record<string, any>> {
         if (args.length === 0) return {};
 
+        // Sentinel used by optional dropdowns; stripped from the answers below.
+        const SKIP_VALUE = "__automate_skip__";
+
         // Questions are built dynamically from tool definitions. inquirer's
         // `prompt` expects a discriminated union keyed on the literal `type`
         // ("input" | "confirm" | "list" | …), which a `.map()` can't infer
@@ -58,12 +61,22 @@ export class PromptService {
             // Dropdown (select) arguments: offer the config values as choices.
             // Falls back to free-text input when no options are configured.
             if (arg.type === "select" && arg.options?.length) {
-                const choices = [
+                const choices: any[] = [
                     ...new Set([
                         ...(arg.default && !arg.options.includes(arg.default) ? [arg.default] : []),
                         ...arg.options,
                     ]),
                 ];
+
+                // Optional dropdowns get an explicit "skip" entry, otherwise
+                // picking a value is unavoidable.
+                if (!arg.required) {
+                    choices.push(
+                        new inquirer.Separator(),
+                        { name: "Skip (leave unset)", value: SKIP_VALUE },
+                    );
+                }
+
                 return {
                     type: "list",
                     name: arg.name,
@@ -88,6 +101,23 @@ export class PromptService {
         });
 
         const answers = await inquirer.prompt(questions);
+
+        // Optional arguments that were skipped / left blank must be omitted
+        // entirely, so handlers see `undefined` rather than a sentinel/"".
+        for (const arg of args) {
+            if (arg.required) continue;
+
+            const value = answers[arg.name];
+            if (
+                value === SKIP_VALUE ||
+                value === undefined ||
+                value === null ||
+                (typeof value === "string" && value.trim() === "")
+            ) {
+                delete answers[arg.name];
+            }
+        }
+
         return answers;
     }
 
