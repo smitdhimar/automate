@@ -4,23 +4,9 @@ import { ConfigService } from "../../services/cli.services/config.service.js"
 import { BitbucketService } from "../../services/business.services/bitbucket.service.js"
 import { ToolDefinition } from "../../types/configs/ui-configs.types/tool-configs.types.js"
 import { UserInteractionService } from "../../services/business.services/user-interaction.service.js"
+import { resolveList } from "../../utils/configListUtils.js"
 
 const config = ConfigService.readConfig();
-
-/**
- * Resolve a config value that may be a legacy single string or the new
- * array format. Arrays drive the dropdown choices; a non-placeholder legacy
- * string is used as a fallback for backward compatibility.
- */
-function resolveList(arr: unknown, legacy: unknown): string[] {
-    const list = Array.isArray(arr)
-        ? arr.filter((v): v is string => typeof v === "string" && v.trim() !== "" && !v.includes("your-"))
-        : [];
-    if (list.length) return list;
-    return typeof legacy === "string" && legacy.trim() !== "" && !legacy.includes("your-")
-        ? [legacy]
-        : [];
-}
 
 // Branch / source / repo-slug lists drive the dropdown choices in the UI.
 const defaultDevStreams = resolveList(config?.Git?.defaultDevStreams, config?.Git?.defaultDevStream);
@@ -46,7 +32,7 @@ export const gitTools: ToolDefinition[] = [
         id: "git_checkout",
         category: "Git",
         name: "Checkout Branch",
-        description: "Checkout a branch ( fetches if not in local )",
+        description: "Checkout a branch ( fetches if not in local ) - STASH - CONDITIONAL FETCH - CHECKOUT - STASH_POP",
         arguments: [
             {
                 name: "origin",
@@ -64,7 +50,7 @@ export const gitTools: ToolDefinition[] = [
         ],
         handler: GitService.checkout,
         listTool: true,
-        helperStr: "stash - conditional fetch - checkout - stash pop"
+        helperStr: "git checkout <origin> <branch>"
 
     },
     {
@@ -101,7 +87,7 @@ export const gitTools: ToolDefinition[] = [
         id: "git_pull",
         category: "Git",
         name: "Pull",
-        description: "Pull from specified origin & branch",
+        description: "Pull from specified origin & branch - STASH - PULL - STASH_POP",
         arguments: [
 
             {
@@ -165,18 +151,11 @@ export const gitTools: ToolDefinition[] = [
         id: "git_diff",
         category: "Git",
         name: "Diff",
-        description: "Show diff with color-coded output (red for removals, green for additions)",
-        arguments: [
-            {
-                name: "target",
-                label: "Target (branch or file)",
-                type: "string",
-                required: false
-            }
-        ],
+        description: "Show diff for user-selected tracked file(s)",
+        arguments: [],
         handler: GitService.diff,
         listTool: true,
-        helperStr: "git diff"
+        helperStr: "git diff -- <selected-files>"
     }
 ]
 
@@ -231,6 +210,27 @@ export const jiraTools: ToolDefinition[] = [
                 required: true,
                 default: defaultSource,
                 options: defaultSources
+            },
+            // The subtask handler creates a Bitbucket branch for the new
+            // subtask, so the repo slug & start point are collected here as
+            // dropdowns — exactly like the bitbucket_createBranch tool.
+            // They stay optional so the AI flow (which may omit them) falls
+            // back to the same dropdown prompt inside the service.
+            {
+                name: "repoSlug",
+                label: "Repo Slug (for the new branch)",
+                type: "select",
+                required: false,
+                default: defaultRepoSlug,
+                options: defaultRepoSlugs
+            },
+            {
+                name: "startPoint",
+                label: "Start Point branch (for the new branch)",
+                type: "select",
+                required: false,
+                default: defaultDevStream,
+                options: defaultDevStreams
             }
         ],
         handler: JiraService.createSubtask.bind(JiraService),

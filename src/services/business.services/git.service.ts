@@ -46,30 +46,36 @@ export class GitService {
     // checks out to specified branch
     static async checkout(args: { branch: string, origin?: string }): Promise<ToolResult> {
         try {
-            // Stash any uncommitted changes before switching branches
-            const stashRes = await GitService.stash();
-            if (!stashRes.success) {
-                return { success: false, error: `Failed to stash changes before checkout: ${stashRes.error}` };
+            // Only stash when the working tree actually has changes.
+            const stashRes = await GitService.stashIfDirty();
+            if (stashRes.result && !stashRes.result.success) {
+                return { success: false, error: `Failed to stash changes before checkout: ${stashRes.result.error}` };
             }
 
-            const result = await git.branch();
-            const branches = result?.all;
-            if(!branches.includes(args.branch)){
-                await git.fetch(args.origin || 'origin', args.branch);
+            try {
+                const result = await git.branch();
+                const branches = result?.all;
+                if(!branches.includes(args.branch)){
+                    await git.fetch(args.origin || 'origin', args.branch);
+                }
+                const checkoutResponse = await git.checkout(args.branch);
+
+                logger.plain(checkoutResponse);
+            } catch (e: any) {
+                // Restore the stashed changes even if the checkout failed.
+                const restore = await GitService.popIfStashed(stashRes);
+                return { success: false, error: restore.error ? `${e.message} (also failed to restore stash: ${restore.error})` : e.message };
             }
-            const checkoutResponse = await git.checkout(args.branch);
 
-            logger.plain(checkoutResponse);
-
-            // Restore the stashed changes after checkout
-            const stashPopRes = await GitService.stashPop();
+            // Restore the stashed changes after checkout (skipped when clean).
+            const stashPopRes = await GitService.popIfStashed(stashRes);
 
             return {
                 success: true,
                 data: {
                     branch: args.branch,
                     stash: stashRes.data,
-                    stashPop: stashPopRes.success ? stashPopRes.data : { error: stashPopRes.error },
+                    stashPop: stashPopRes.data,
                 },
             };
         } catch (e: any) {
@@ -80,12 +86,59 @@ export class GitService {
     // pull from specific origin branch
     static async pullFrom(args: { branch: string, origin?: string }): Promise<ToolResult> {
         try {
-            const response = await git.pull(args.origin || 'origin', args.branch);
-            logger.plain(response);
-            return { success: true, data: { summary: response.summary } };
+            // Only stash when the working tree actually has changes.
+            const stashRes = await GitService.stashIfDirty();
+            if (stashRes.result && !stashRes.result.success) {
+                return { success: false, error: `Failed to stash changes before pull: ${stashRes.result.error}` };
+            }
+
+            let response;
+            try {
+                response = await git.pull(args.origin || 'origin', args.branch);
+                logger.plain(response);
+            } catch (e: any) {
+                // Restore the stashed changes even if the pull failed.
+                const restore = await GitService.popIfStashed(stashRes);
+                return { success: false, error: restore.error ? `${e.message} (also failed to restore stash: ${restore.error})` : e.message };
+            }
+
+            // Restore the stashed changes after pull (skipped when clean).
+            const stashPopRes = await GitService.popIfStashed(stashRes);
+
+            return {
+                success: true,
+                data: {
+                    summary: response.summary,
+                    stash: stashRes.data,
+                    stashPop: stashPopRes.data,
+                },
+            };
         } catch (e: any) {
             return { success: false, error: e.message };
         }
+    }
+
+    // Stash only if the working tree is dirty; reports whether a stash was taken.
+    private static async stashIfDirty(): Promise<{ stashed: boolean; data: any; result?: ToolResult }> {
+        const isClean = await GitService.isClean();
+        if (isClean) {
+            return { stashed: false, data: { skipped: true, reason: "working tree clean" } };
+        }
+
+        const result = await GitService.stash();
+        return { stashed: true, data: result.data, result };
+    }
+
+    // Pop the stash only when one was taken; reports a skip otherwise.
+    private static async popIfStashed(stash: { stashed: boolean }): Promise<{ data: any; error?: string }> {
+        if (!stash.stashed) {
+            return { data: { skipped: true, reason: "no stash taken" } };
+        }
+
+        const result = await GitService.stashPop();
+        return result.success
+            ? { data: result.data }
+            : { data: { error: result.error }, error: result.error };
     }
 
     // take stash
@@ -132,6 +185,7 @@ export class GitService {
         }
     }
 
+    // stage the files
     static async add(): Promise<ToolResult> {
         try {
             const statusResponse = await GitService.status();
@@ -140,10 +194,10 @@ export class GitService {
             }
 
             const indexedFileArr: Array<{ index: number; path: string }> = statusResponse.data.indexedFileArr;
-            const answer = await UserInteractionService.askText("Enter comma separated index values to add, or enter '.' to add all: ");
+            const answer = await UserInteractionService.askText("Enter comma separated index values or ranges to add (e.g. '1,2-4'), or enter '.' to add all: ");
 
             if (!answer || !validateGitAddInput(answer)) {
-                return { success: false, error: "Invalid input. Expected '.' or comma-separated numbers (e.g., '1,2,3')." };
+                return { success: false, error: "Invalid input. Expected '.' or numbers/ranges (e.g., '1,2-4')." };
             }
 
             if (answer.trim() === ".") {
@@ -171,13 +225,40 @@ export class GitService {
         }
     }
 
-    // show git diff with color-coded output (red for removals, green for additions)
-    static async diff(args: { target?: string}): Promise<ToolResult> {
+    // show git diff for user-selected tracked file(s)
+    // (same index-based selection as add(), with range support e.g. "1,3-5")
+    static async diff(_args?: Record<string, any>): Promise<ToolResult> {
         try {
-            const diffArgs: string[] = [];
-            if (args?.target) diffArgs.push(args.target);
+            // Reuse status() to print the indexed list of tracked files.
+            const statusResponse = await GitService.status();
+            if (!statusResponse?.success || !statusResponse.data?.indexedFileArr) {
+                return { success: false, error: "Failed to fetch status" };
+            }
 
-            const diffOutput = await git.diff(diffArgs);
+            const indexedFileArr: Array<{ index: number; path: string }> = statusResponse.data.indexedFileArr;
+            if (indexedFileArr.length === 0) {
+                logger.plain("No changes to display.");
+                return { success: true, data: { diff: "" } };
+            }
+
+            const answer = await UserInteractionService.askText(
+                "Enter comma separated index values or ranges to diff (e.g. '1,2-4'), or enter '.' to diff all: "
+            );
+
+            if (!answer || !validateGitAddInput(answer)) {
+                return { success: false, error: "Invalid input. Expected '.' or numbers/ranges (e.g., '1,2-4')." };
+            }
+
+            const filePaths = answer.trim() === "."
+                ? indexedFileArr.map((item) => item.path)
+                : getFilePathsFromIndices(answer, indexedFileArr);
+
+            if (filePaths.length === 0) {
+                return { success: false, error: "No matching file paths found for the provided indices." };
+            }
+
+            // Use raw args so selected paths are never interpreted as git options.
+            const diffOutput = await git.raw(["diff", "--", ...filePaths]);
 
             if (!diffOutput) {
                 logger.plain("No changes to display.");
@@ -236,5 +317,12 @@ export class GitService {
         } catch (e: any) {
             return { success: false, error: e.message };
         }
+    }
+    // check if git working tree is clean or not 
+    static async isClean(): Promise<Boolean> {
+        const status = await git.status();
+        const res = await status.isClean()
+        if(res) return true;
+        return false; 
     }
 }

@@ -16,6 +16,11 @@ export const DEFAULT_CONFIG = {
       "html",
       "jsp",
       "py",
+      "tf",
+      "tfvars",
+      "mjs",
+      "css",
+      "json"
     ],
   },
   Jira: {
@@ -62,9 +67,9 @@ export const DEFAULT_CONFIG = {
     },
   },
   LLM: {
-    provider: "deepseek",
+    provider: "",
     apiKey: "your-llm-api-key",
-    model: "deepseek-chat",
-    baseUrl: "https://api.deepseek.com",
+    model: "-chat",
+    baseUrl: "https://api..com",
   },
 };
