@@ -16,6 +16,11 @@ export const DEFAULT_CONFIG = {
       "html",
       "jsp",
       "py",
+      "tf",
+      "tfvars",
+      "mjs",
+      "css",
+      "json"
     ],
   },
   Jira: {
